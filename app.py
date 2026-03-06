@@ -1,6 +1,6 @@
 import os
 import json
-import anthropic
+from openai import OpenAI, AuthenticationError, RateLimitError, APIError
 from flask import Flask, request, Response, render_template, stream_with_context
 from dotenv import load_dotenv
 
@@ -155,37 +155,34 @@ JOB DESCRIPTION
 
 Please rewrite my resume following all the rules in your instructions. Tailor it specifically for the {role_label} role at a {sector_label} company based on the job description above."""
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        return {"error": "ANTHROPIC_API_KEY environment variable is not set."}, 500
+        return {"error": "OPENAI_API_KEY environment variable is not set."}, 500
 
     def generate():
-        client = anthropic.Anthropic(api_key=api_key)
+        client = OpenAI(api_key=api_key)
         try:
-            with client.messages.stream(
-                model="claude-opus-4-6",
+            stream = client.chat.completions.create(
+                model="gpt-4o",
                 max_tokens=8000,
-                thinking={"type": "adaptive"},
-                system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": user_message}],
-            ) as stream:
-                for event in stream:
-                    # Only stream text deltas (skip thinking blocks)
-                    if (
-                        event.type == "content_block_delta"
-                        and hasattr(event.delta, "type")
-                        and event.delta.type == "text_delta"
-                    ):
-                        chunk = event.delta.text
-                        yield f"data: {json.dumps({'text': chunk})}\n\n"
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": user_message},
+                ],
+                stream=True,
+            )
+            for chunk in stream:
+                delta = chunk.choices[0].delta
+                if delta.content:
+                    yield f"data: {json.dumps({'text': delta.content})}\n\n"
 
             yield f"data: {json.dumps({'done': True})}\n\n"
 
-        except anthropic.AuthenticationError:
-            yield f"data: {json.dumps({'error': 'Invalid API key. Check your ANTHROPIC_API_KEY.'})}\n\n"
-        except anthropic.RateLimitError:
+        except AuthenticationError:
+            yield f"data: {json.dumps({'error': 'Invalid API key. Check your OPENAI_API_KEY.'})}\n\n"
+        except RateLimitError:
             yield f"data: {json.dumps({'error': 'Rate limit reached. Please wait a moment and try again.'})}\n\n"
-        except anthropic.APIError as e:
+        except APIError as e:
             yield f"data: {json.dumps({'error': f'API error: {str(e)}'})}\n\n"
         except Exception as e:
             yield f"data: {json.dumps({'error': f'Unexpected error: {str(e)}'})}\n\n"
