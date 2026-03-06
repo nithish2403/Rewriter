@@ -30,7 +30,7 @@ CORE RULES — NON-NEGOTIABLE
 
 6. BULLET DISCIPLINE: Bullets must be 1–2 lines maximum. Strong active verbs. Outcome-focused. Past tense for previous roles, present tense for current role.
 
-7. BULLET COUNT — HARD MINIMUM: The user message will include a "MANDATORY BULLET COUNTS" table listing the minimum number of bullets required for each role. You MUST meet or exceed every number in that table. Never produce fewer bullets than specified. Producing fewer is a failure regardless of any other consideration. You may always add more bullets where the role, JD, or candidate's experience warrants it. Rewrite every original bullet in stronger, more targeted language — do not simply copy or drop them. A full, substance-rich resume beats a short one for senior technical roles.
+7. BULLET COUNT — HARD MINIMUM: The user message contains an "ORIGINAL BULLETS — REWRITE INSTRUCTIONS" section. It lists every original bullet per role, numbered. You must produce at least one rewritten output bullet for every numbered input bullet — do not merge two originals into one output, and do not skip any. Think of it as a 1-in → 1-out minimum mapping: 8 originals → at least 8 outputs; 5 originals → at least 5 outputs. You may produce more. Never produce fewer. Rewrite each in stronger, more targeted language for the specific role and sector.
 
 ═══════════════════════════════════════════════════════════
 IDENTITY RULE — CRITICAL
@@ -113,53 +113,115 @@ B. TAILORING NOTES (after the resume)
 Keep the resume section clean and copy-paste ready. Put all analysis in section B only."""
 
 
-# ── Bullet counter ────────────────────────────────────────────────────────────
+# ── Bullet parser ─────────────────────────────────────────────────────────────
 
 import re
 
-def count_bullets_per_role(resume_text):
+_BULLET_RE = re.compile(r'^\s*[-•·*]\s+')
+_SKIP_SECTIONS = re.compile(
+    r'^\s*(certifications?|education|qualifications?|key skills?|skills?|summary|profile)\s*$',
+    re.IGNORECASE
+)
+
+def _clean(s):
+    """Collapse internal whitespace / tabs to a single space and strip."""
+    return re.sub(r'[\t ]+', ' ', s).strip()
+
+
+def parse_roles_with_bullets(resume_text):
     """
-    Parse the resume and return a dict of {role_header: bullet_count}.
-    A bullet is any line starting with optional whitespace then one of: - • · * or a digit+dot.
-    A role header is a non-bullet non-empty line that follows a company/org line pattern.
-    We split on blank lines between blocks and treat each block's first line as the heading.
+    Return a list of (role_heading: str, bullets: list[str]) tuples,
+    one per work-experience role found in the resume.
+    Skips non-work sections (Skills, Certifications, Education, etc.).
     """
-    bullet_pattern = re.compile(r'^\s*[-•·*]|\s*\d+\.')
     lines = resume_text.splitlines()
-    counts = {}
+    roles = []          # [(heading, [bullet, ...]), ...]
     current_heading = None
-    current_count = 0
+    current_bullets = []
+    in_work = False     # True once we're past the skills/summary block
 
     for line in lines:
-        stripped = line.strip()
-        if not stripped:
+        clean = _clean(line)
+        if not clean:
             continue
-        if bullet_pattern.match(line):
-            current_count += 1
+
+        if _BULLET_RE.match(line):
+            # It's a bullet line
+            bullet_text = _BULLET_RE.sub('', line).strip()
+            if current_heading and in_work:
+                current_bullets.append(bullet_text)
         else:
-            # Non-bullet line — could be a new role heading
-            if current_heading and current_count > 0:
-                counts[current_heading] = current_count
-            # Start a new section; use first non-bullet non-empty line as heading
-            current_heading = stripped[:80]  # cap length for display
-            current_count = 0
+            # Non-bullet line — save previous role if it had bullets
+            if current_heading and current_bullets:
+                roles.append((current_heading, current_bullets))
+            elif current_heading and not current_bullets:
+                # heading with no bullets yet — update heading (e.g. company → job title → date)
+                pass
 
-    if current_heading and current_count > 0:
-        counts[current_heading] = current_count
+            if _SKIP_SECTIONS.match(clean):
+                current_heading = None
+                current_bullets = []
+                continue
 
-    return counts
+            # Detect start of WORK EXPERIENCE section
+            if re.match(r'^\s*work\s+experience\s*$', clean, re.IGNORECASE):
+                in_work = True
+                current_heading = None
+                current_bullets = []
+                continue
+
+            if in_work:
+                # Each non-bullet non-empty line in work section is a potential heading.
+                # We keep updating the heading until bullets start.
+                if current_bullets:
+                    # We already started bullets → this is a new role's company/title line
+                    current_heading = clean
+                    current_bullets = []
+                else:
+                    # Still in preamble lines for current role (company, title, date on separate lines)
+                    # Prefer the job-title line (shorter, no city/country suffix pattern)
+                    if current_heading is None:
+                        current_heading = clean
+                    else:
+                        # Replace if this line looks more like a job title than a city/date line
+                        if not re.search(r'\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|\d{4}|london|uk|india|present)\b', clean, re.IGNORECASE):
+                            current_heading = clean
+
+    # Flush last role
+    if current_heading and current_bullets:
+        roles.append((current_heading, current_bullets))
+
+    return roles
 
 
 def build_bullet_constraints(resume_text):
-    """Return a formatted string listing required minimum bullet counts per role."""
-    counts = count_bullets_per_role(resume_text)
-    if not counts:
+    """
+    Return a structured block that lists every original bullet per role,
+    instructing the model to rewrite each one individually.
+    This is far more binding than a simple count instruction.
+    """
+    roles = parse_roles_with_bullets(resume_text)
+    if not roles:
         return ""
-    lines = ["MANDATORY BULLET COUNTS — you MUST produce AT LEAST this many bullets for each role:"]
-    for heading, count in counts.items():
-        lines.append(f"  • {heading}: minimum {count} bullets")
-    lines.append("Do NOT produce fewer. You may add more. Never merge or drop bullets.")
-    return "\n".join(lines)
+
+    out = [
+        "══════════════════════════════════════════════════════════════",
+        "ORIGINAL BULLETS — REWRITE INSTRUCTIONS (HARD REQUIREMENT)",
+        "══════════════════════════════════════════════════════════════",
+        "For EACH role below you MUST produce AT LEAST the same number",
+        "of bullets shown. Rewrite every listed bullet in stronger,",
+        "more targeted language suited to the target role and sector.",
+        "Do NOT merge, drop, or skip any bullet. You may add extras.",
+        "",
+    ]
+    for heading, bullets in roles:
+        out.append(f"ROLE: {heading}  ({len(bullets)} bullets — minimum {len(bullets)} required)")
+        for i, b in enumerate(bullets, 1):
+            out.append(f"  {i}. {b}")
+        out.append("")
+
+    out.append("══════════════════════════════════════════════════════════════")
+    return "\n".join(out)
 
 
 # ── Sector labels ─────────────────────────────────────────────────────────────
@@ -204,10 +266,6 @@ def rewrite():
 TARGET SECTOR: {sector_label}
 
 ══════════════════════════════
-{bullet_constraints}
-══════════════════════════════
-
-══════════════════════════════
 BASE RESUME
 ══════════════════════════════
 {base_resume}
@@ -217,9 +275,12 @@ JOB DESCRIPTION
 ══════════════════════════════
 {job_description}
 
+══════════════════════════════
+{bullet_constraints}
+
 Please rewrite my resume following all the rules in your instructions. Tailor it specifically for the {role_label} role at a {sector_label} company based on the job description above.
 
-REMINDER: Check the MANDATORY BULLET COUNTS above and verify your output meets or exceeds each minimum before finishing."""
+FINAL CHECK BEFORE YOU WRITE: Re-read the ORIGINAL BULLETS section above. Count the bullets listed for each role. Your output MUST contain at least that many bullets per role — no exceptions."""
 
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
