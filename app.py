@@ -30,7 +30,7 @@ CORE RULES — NON-NEGOTIABLE
 
 6. BULLET DISCIPLINE: Bullets must be 1–2 lines maximum. Strong active verbs. Outcome-focused. Past tense for previous roles, present tense for current role.
 
-7. BULLET COUNT — USE JUDGEMENT: Write as many bullets per role as needed to make the candidate a strong fit, typically 5–8 for senior/current roles and 3–5 for older roles. Do not pad with weak bullets. Do not cut strong ones just to shorten. Quality and relevance over fixed counts.
+7. BULLET COUNT — MINIMUM MATCH, THEN EXPAND: Count the number of bullets in the original resume for each role. That count is your MINIMUM — never produce fewer. If the original has 9 bullets for a role, produce at least 9. If it has 5, produce at least 5. You may add additional bullets where the role or JD warrants more coverage of the candidate's real experience. Do not pad with hollow bullets, but do not cut or consolidate bullets to shorten the resume. A longer, substance-rich resume is better than a short, thin one for senior technical roles.
 
 ═══════════════════════════════════════════════════════════
 IDENTITY RULE — CRITICAL
