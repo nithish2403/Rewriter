@@ -296,12 +296,23 @@
         </div>
         <div>
           <label for="role">Target Role</label>
-          <select id="role">
-            <option value="devops">DevOps Engineer</option>
-            <option value="cloud">Cloud Engineer</option>
-            <option value="platform">Platform Engineer</option>
-            <option value="sre">Site Reliability Engineer</option>
-          </select>
+          <input type="text" id="role" list="role-suggestions"
+            placeholder="e.g. QA Automation Engineer"
+            style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:13px;padding:10px 12px;outline:none;transition:border-color 0.15s;"
+            onfocus="this.style.borderColor='var(--accent)'"
+            onblur="this.style.borderColor='var(--border)'" />
+          <datalist id="role-suggestions">
+            <option value="DevOps Engineer">
+            <option value="Cloud Engineer">
+            <option value="Platform Engineer">
+            <option value="Site Reliability Engineer">
+            <option value="QA Automation Engineer">
+            <option value="Backend Engineer">
+            <option value="Data Engineer">
+            <option value="Infrastructure Engineer">
+            <option value="Security Engineer">
+            <option value="MLOps Engineer">
+          </datalist>
         </div>
       </div>
 
@@ -411,6 +422,7 @@
 
     if (!baseResume) { showError("Please paste your base resume."); return; }
     if (!jobDesc)    { showError("Please paste the job description."); return; }
+    if (!role)       { showError("Please enter the target role."); return; }
 
     // Reset output
     outputText = "";
