@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resume Rewriter — Tech / Fintech / Banking</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --border:    #2e3147;
+      --accent:    #4f6ef7;
+      --accent-h:  #3d5ce0;
+      --green:     #22c55e;
+      --red:       #ef4444;
+      --text:      #e4e6f0;
+      --muted:     #8b8fa8;
+      --mono:      'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+      --sans:      'Inter', system-ui, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 18px 28px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--surface);
+    }
+    header .logo {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    header h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.02em; }
+    header p  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* ── Main layout ── */
+    main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      flex: 1;
+      overflow: hidden;
+      height: calc(100vh - 73px);
+    }
+
+    /* ── Panels ── */
+    .panel {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-right: 1px solid var(--border);
+    }
+    .panel:last-child { border-right: none; }
+
+    .panel-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .panel-header h2 {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ── Form elements ── */
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 6px;
+      letter-spacing: 0.03em;
+    }
+
+    textarea, select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 13px;
+      padding: 10px 12px;
+      transition: border-color 0.15s;
+      outline: none;
+      resize: vertical;
+    }
+    textarea:focus, select:focus {
+      border-color: var(--accent);
+    }
+    select { cursor: pointer; }
+
+    .selects-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* ── Submit button ── */
+    #submit-btn {
+      width: 100%;
+      padding: 11px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    #submit-btn:hover:not(:disabled) { background: var(--accent-h); }
+    #submit-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    .spinner.active { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Status pill ── */
+    #status {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: none;
+      align-items: center;
+      gap: 6px;
+    }
+    #status.show { display: flex; }
+    #status.running { background: rgba(79,110,247,0.15); color: var(--accent); }
+    #status.done    { background: rgba(34,197,94,0.15);  color: var(--green);  }
+    #status.error   { background: rgba(239,68,68,0.15);  color: var(--red);    }
+
+    .pulse {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 1s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* ── Output area ── */
+    #output-wrap {
+      flex: 1;
+      overflow-y: auto;
+      background: var(--bg);
+    }
+
+    #output {
+      padding: 20px;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--text);
+      min-height: 100%;
+    }
+
+    #placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 12px;
+      color: var(--muted);
+    }
+    #placeholder svg { opacity: 0.3; }
+    #placeholder p { font-size: 13px; }
+
+    /* ── Copy button ── */
+    #copy-btn {
+      padding: 6px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: none;
+    }
+    #copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    #copy-btn.visible { display: block; }
+    #copy-btn.copied { border-color: var(--green); color: var(--green); }
+
+    /* ── Section dividers in output ── */
+    .section-A { color: #93c5fd; font-weight: bold; }
+    .section-B { color: #fbbf24; font-weight: bold; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── Error banner ── */
+    #error-msg {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: var(--red);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      display: none;
+    }
+    #error-msg.show { display: block; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+      }
+      .panel { height: auto; min-height: 400px; }
+      #output-wrap { min-height: 500px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">✦</div>
+  <div>
+    <h1>Resume Rewriter</h1>
+    <p>Tech · Fintech · Banking — powered by Claude Opus</p>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── LEFT PANEL: Inputs ── -->
+  <div class="panel">
+    <div class="panel-header">
+      <h2>Input</h2>
+    </div>
+    <div class="panel-body">
+
+      <div class="selects-row">
+        <div>
+          <label for="sector">Target Sector</label>
+          <select id="sector">
+            <option value="fintech">Fintech Startup</option>
+            <option value="investment_banking">Investment Banking / Hedge Fund</option>
+            <option value="big_tech">Big Tech (FAANG-tier)</option>
+            <option value="banking">Banking (Retail / Commercial)</option>
+            <option value="enterprise">Traditional Enterprise Tech</option>
+          </select>
+        </div>
+        <div>
+          <label for="role">Target Role</label>
+          <select id="role">
+            <option value="devops">DevOps Engineer</option>
+            <option value="cloud">Cloud Engineer</option>
+            <option value="platform">Platform Engineer</option>
+            <option value="sre">Site Reliability Engineer</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label for="base-resume">Base Resume</label>
+        <textarea id="base-resume" rows="18"
+          placeholder="Paste your full base resume here…"></textarea>
+      </div>
+
+      <div>
+        <label for="job-desc">Job Description</label>
+        <textarea id="job-desc" rows="14"
+          placeholder="Paste the full job description here…"></textarea>
+      </div>
+
+      <div id="error-msg"></div>
+
+      <button id="submit-btn" onclick="submitRewrite()">
+        <div class="spinner" id="spinner"></div>
+        <span id="btn-label">Rewrite Resume</span>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ── RIGHT PANEL: Output ── -->
+  <div class="panel">
+    <div class="panel-header">
+      <h2>Output</h2>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div id="status">
+          <div class="pulse"></div>
+          <span id="status-text"></span>
+        </div>
+        <button id="copy-btn" onclick="copyOutput()">Copy</button>
+      </div>
+    </div>
+    <div id="output-wrap">
+      <div id="placeholder">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.5">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0
+                   2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+        <p>Your tailored resume will appear here.</p>
+      </div>
+      <pre id="output" style="display:none;"></pre>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  let outputText = "";
+  let streaming  = false;
+  let controller = null;
+
+  function setStatus(type, text) {
+    const el = document.getElementById("status");
+    el.className = "show " + type;
+    document.getElementById("status-text").textContent = text;
+  }
+
+  function clearStatus() {
+    document.getElementById("status").className = "";
+  }
+
+  function showError(msg) {
+    const el = document.getElementById("error-msg");
+    el.textContent = msg;
+    el.className = "show";
+  }
+
+  function clearError() {
+    const el = document.getElementById("error-msg");
+    el.className = "";
+  }
+
+  function setLoading(on) {
+    const btn     = document.getElementById("submit-btn");
+    const spinner = document.getElementById("spinner");
+    const label   = document.getElementById("btn-label");
+    btn.disabled      = on;
+    spinner.className = on ? "spinner active" : "spinner";
+    label.textContent = on ? "Rewriting…" : "Rewrite Resume";
+    streaming         = on;
+  }
+
+  function scrollOutput() {
+    const wrap = document.getElementById("output-wrap");
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  async function submitRewrite() {
+    if (streaming) return;
+
+    clearError();
+
+    const baseResume = document.getElementById("base-resume").value.trim();
+    const jobDesc    = document.getElementById("job-desc").value.trim();
+    const sector     = document.getElementById("sector").value;
+    const role       = document.getElementById("role").value;
+
+    if (!baseResume) { showError("Please paste your base resume."); return; }
+    if (!jobDesc)    { showError("Please paste the job description."); return; }
+
+    // Reset output
+    outputText = "";
+    const outputEl      = document.getElementById("output");
+    const placeholderEl = document.getElementById("placeholder");
+    const copyBtn       = document.getElementById("copy-btn");
+
+    outputEl.style.display = "none";
+    outputEl.textContent   = "";
+    placeholderEl.style.display = "flex";
+    copyBtn.className           = "";
+
+    setLoading(true);
+    setStatus("running", "Generating…");
+
+    controller = new AbortController();
+
+    try {
+      const res = await fetch("/rewrite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base_resume: baseResume, job_description: jobDesc,
+                               sector, role }),
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Server error." }));
+        throw new Error(err.error || "Server error.");
+      }
+
+      const reader  = res.body.getReader();
+      const decoder = new TextDecoder();
+      let   buffer  = "";
+
+      placeholderEl.style.display = "none";
+      outputEl.style.display      = "block";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop(); // keep incomplete line
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const raw = line.slice(6).trim();
+          if (!raw) continue;
+
+          let parsed;
+          try { parsed = JSON.parse(raw); } catch { continue; }
+
+          if (parsed.error) {
+            showError(parsed.error);
+            setStatus("error", "Error");
+            setLoading(false);
+            return;
+          }
+
+          if (parsed.text) {
+            outputText += parsed.text;
+            outputEl.textContent = outputText;
+            scrollOutput();
+          }
+
+          if (parsed.done) {
+            setStatus("done", "Done");
+            copyBtn.className = "visible";
+            setLoading(false);
+            return;
+          }
+        }
+      }
+
+      setStatus("done", "Done");
+      copyBtn.className = "visible";
+
+    } catch (err) {
+      if (err.name === "AbortError") {
+        setStatus("error", "Cancelled");
+      } else {
+        showError(err.message || "Something went wrong.");
+        setStatus("error", "Error");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function copyOutput() {
+    if (!outputText) return;
+    navigator.clipboard.writeText(outputText).then(() => {
+      const btn = document.getElementById("copy-btn");
+      btn.textContent = "Copied!";
+      btn.className   = "visible copied";
+      setTimeout(() => {
+        btn.textContent = "Copy";
+        btn.className   = "visible";
+      }, 2000);
+    });
+  }
+
+  // Keyboard shortcut: Ctrl/Cmd + Enter to submit
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      submitRewrite();
+    }
+  });
+</script>
+
+</body>
+</html>
