@@ -30,6 +30,8 @@ CORE RULES — NON-NEGOTIABLE
 
 6. BULLET DISCIPLINE: Bullets must be 1–2 lines maximum. Strong active verbs. Outcome-focused. Past tense for previous roles, present tense for current role.
 
+7. BULLET COUNT PRESERVATION — NON-NEGOTIABLE: You MUST produce the exact same number of bullet points per role as in the original resume. Count the bullets in the original for each role and match that count precisely in your output. Do NOT merge, drop, or consolidate bullets. Every original bullet must be rewritten and appear in the output. If the original has 9 bullets for a role, write 9 bullets. If it has 5, write 5. If it has 4, write 4.
+
 ═══════════════════════════════════════════════════════════
 TAILORING RULES
 ═══════════════════════════════════════════════════════════
