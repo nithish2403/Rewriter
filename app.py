@@ -82,11 +82,31 @@ METRICS & IMPACT RULES
 ═══════════════════════════════════════════════════════════
 
 • Metrics must feel earned and defensible — not manufactured.
-• Vary how metrics are expressed: percentages, absolutes (£, time saved, team size, system count), and qualitative scope statements.
-• 3–4 strong metric bullets per role is ideal. The rest should be clean outcome or ownership statements.
 • Only use figures explicitly present in the original resume. Do not invent numbers.
-• If metrics look suspiciously round or too frequent, convert some bullets to scope/ownership statements instead.
 • Remove or soften anything that sounds inflated or difficult to defend in an interview.
+
+• METRIC TYPE DIVERSITY — CRITICAL: Do NOT rely on percentages alone. Across the full resume, use a deliberate mix of all of these metric types:
+  — Percentage-based: "reduced errors by 15%", "improved throughput by 40%"
+  — Absolute financial: "saved £30k/year", "eliminated £10k/month in avoidable spend"
+  — Time-based: "cut provisioning from hours to 6 minutes", "reduced mean-time-to-detect by 35%", "delivered in 3 weeks"
+  — Scale/count-based: "across 7 AWS accounts", "supporting 250+ users", "1M+ assets processed", "15+ engineers"
+  — Ranking/positioning: "first team to achieve X", "reduced to zero incidents in Q1", "consistently met 99.9% SLA"
+  — Scope statements (where no metric exists): "owned end-to-end", "sole engineer responsible for", "across 3 environments"
+  No more than 40% of metric-bearing bullets should use percentages. If you have written 4 bullets with % metrics, the next metric must be a different type.
+
+• WORD FREQUENCY — avoid repeating high-frequency generic words across bullets:
+  — Instead of "AWS" every time: use "the platform", "cloud environments", "the multi-account estate", "our AWS estate"
+  — Instead of "infrastructure" every time: use "platform", "environment", "estate", "systems", "stack"
+  — Instead of "reduce/reduced" every time: use "cut", "trimmed", "brought down", "halved", "shrunk", "lowered"
+  — Instead of "improve/improved" every time: use "accelerated", "elevated", "tightened", "boosted", "sharpened"
+  No single common word (aws, infrastructure, reduce, improve, implement, automate) should appear more than 3 times across the full resume text.
+
+• ABBREVIATION HYGIENE: Never write AWS service names as bare isolated abbreviations in a sentence. Write them in context:
+  — WRONG: "Used S3, EC2, IAM to manage..."
+  — RIGHT: "Managed access controls via IAM Identity Center, compute via EC2, and object storage in Amazon S3..."
+  Spell out what a service does on first mention if the audience may not know it. Never leave single-letter words (S, a, E) floating in a bullet from formatting artefacts.
+
+• INDUSTRY TERMINOLOGY: Each bullet should use at least one piece of role-specific technical vocabulary drawn from the job description or sector. Generic verbs with no technical grounding are weak. E.g. for a DevOps/SRE role: reference SLOs, toil reduction, runbook automation, blast radius, change failure rate, MTTR, canary deployments, GitOps, shift-left testing, observability signals, pager rota — where the candidate's experience genuinely supports it.
 
 ═══════════════════════════════════════════════════════════
 THEMES TO EMPHASISE (where supported by real experience)
