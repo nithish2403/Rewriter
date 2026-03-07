@@ -541,6 +541,45 @@ Fill in every ◆SLOT-N with a rewritten bullet. Do not skip, merge, or delete a
                     verb_counts[first_word] = verb_counts.get(first_word, 0) + 1
             repeated_verbs = {v: c for v, c in verb_counts.items() if c > 1}
 
+            # ── Detect high-frequency repeated words anywhere in bullets ─────
+            # Rule: no common word should appear more than 3 times across
+            # the full resume (matches the WORD FREQUENCY rule in SYSTEM_PROMPT).
+            HIGH_FREQ_WATCH = {
+                # reduce family
+                "reducing", "reduced", "reduce",
+                # improve family
+                "improving", "improved", "improve",
+                # implement family
+                "implementing", "implemented", "implement",
+                # increase family
+                "increasing", "increased", "increase",
+                # manage family
+                "managing", "managed", "manage",
+                # ensure family
+                "ensuring", "ensured", "ensure",
+                # utilise family
+                "utilising", "utilised", "utilise",
+                "utilizing", "utilized", "utilize",
+                # support family
+                "supporting", "supported", "support",
+                # enable family
+                "enabling", "enabled", "enable",
+                # create family
+                "creating", "created", "create",
+                # build family
+                "building", "built", "build",
+                # deliver family
+                "delivering", "delivered", "deliver",
+                # maintain family
+                "maintaining", "maintained", "maintain",
+            }
+            all_bullet_text = " ".join(bullet_lines).lower()
+            repeated_words = {}
+            for word in HIGH_FREQ_WATCH:
+                count = len(re.findall(r'\b' + re.escape(word) + r'\b', all_bullet_text))
+                if count > 3:
+                    repeated_words[word] = count
+
             fix_parts = []
             if shortfalls:
                 fix_parts.append(
@@ -551,9 +590,31 @@ Fill in every ◆SLOT-N with a rewritten bullet. Do not skip, merge, or delete a
             if repeated_verbs:
                 verb_list = ", ".join(f'"{v}" ({c}x)' for v, c in repeated_verbs.items())
                 fix_parts.append(
-                    f"ISSUE 2 — REPEATED VERBS: These action verbs appear more than once: {verb_list}. "
+                    f"ISSUE 2 — REPEATED OPENING VERBS: These action verbs open more than one bullet: {verb_list}. "
                     "Every opening verb across ALL bullets must be unique — no verb may appear more than once. "
                     "Replace duplicate uses with varied alternatives from the verb bank in your instructions."
+                )
+            if repeated_words:
+                word_list = ", ".join(
+                    f'"{w}" ({c}x)'
+                    for w, c in sorted(repeated_words.items(), key=lambda x: -x[1])
+                )
+                fix_parts.append(
+                    f"ISSUE 3 — REPEATED WORDS (mid-sentence): These common words appear more than 3 times "
+                    f"across all bullet text: {word_list}. "
+                    "The rule states no single common word should appear more than 3 times across the full resume. "
+                    "Replace excess uses with varied synonyms. Synonym guide:\n"
+                    "  • reduce/reducing/reduced → cut, trimmed, brought down, halved, shrunk, lowered, decreased, curtailed\n"
+                    "  • improve/improving/improved → accelerated, elevated, tightened, boosted, sharpened, enhanced, strengthened\n"
+                    "  • implement/implementing/implemented → deployed, rolled out, shipped, launched, engineered, introduced, constructed\n"
+                    "  • manage/managing/managed → operated, oversaw, stewarded, owned, governed, directed, coordinated\n"
+                    "  • ensure/ensuring/ensured → enforced, guaranteed, validated, hardened, cemented\n"
+                    "  • utilise/utilising/utilised → applied, adopted, harnessed, via [as preposition]\n"
+                    "  • support/supporting/supported → underpinned, sustained, reinforced, backed\n"
+                    "  • enable/enabling/enabled → unblocked, empowered, facilitated, unlocked\n"
+                    "  • maintain/maintaining/maintained → sustained, operated, kept, governed, stewarded\n"
+                    "Rewrite the affected bullets so each word's total count across the resume is 3 or below. "
+                    "Return the full corrected resume."
                 )
 
             final = draft
@@ -619,7 +680,11 @@ Check ALL of the following categories thoroughly:
 
 2. FORMATTING & WHITESPACE
    - Double or extra spaces between words
-   - Inconsistent bullet point styles (mixing -, •, *, –)
+   - Inconsistent bullet point styles (mixing -, •, *, –, ◆ or any combination of these characters)
+     IMPORTANT: When flagging this issue, you MUST quote the exact bullet text where the non-standard
+     character appears (e.g. '◆ Architected a multi-account...') and name the company/role it is under.
+     The location field must be specific, e.g. "Konsistent Consulting, bullet 1: '◆ Architected...'"
+     NOT just "Work Experience section". If multiple bullets use the non-standard character, quote all of them.
    - Inconsistent date formats (mixing "Jan 2024" with "01/2024" etc.)
    - Inconsistent capitalisation in headings or job titles
    - Trailing spaces or blank lines within sections
@@ -642,6 +707,10 @@ Check ALL of the following categories thoroughly:
    - Vague statements with no evidence ("worked on various projects", "helped with...")
    - Quantified achievements: flag any role that has NO metrics at all
    - Action verb diversity: flag if same opening verb used 2+ times across bullets
+   - Word repetition (mid-sentence): scan ALL bullet text for any single word (e.g. "reducing", "improving",
+     "managing", "ensuring", "utilising", "supporting") that appears more than 3 times across the full resume.
+     Flag each repeated word and quote 2–3 examples of the bullets where it appears so the candidate can see
+     the pattern clearly. Suggest specific synonyms (e.g. "reducing" → cut, trimmed, lowered, curtailed).
    - Impact statements: are outcomes clear, or just task descriptions?
 
 5. STRUCTURAL COMPLETENESS
@@ -654,7 +723,13 @@ Check ALL of the following categories thoroughly:
 
 6. LENGTH & DENSITY
    - Resume length: warn if likely > 2 pages for < 5 years experience, or < 1 page for > 5 years
-   - Bullet count per role: flag any role with < 3 bullets (too thin) or > 10 bullets (too dense)
+   - Bullet count per role:
+     → < 3 bullets = too thin (flag as warning)
+     → 10 bullets = borderline dense (flag as info only)
+     → > 10 bullets = too dense (flag as warning)
+     → 4–9 bullets per role is the healthy range — DO NOT flag this as dense, even for a current role.
+     → A current senior/mid-senior role with 7–9 bullets is CORRECT and should NOT be flagged.
+     → Only flag density if bullet count is genuinely over 10.
    - Summary length: warn if > 6 lines (too long for ATS snippet)
 
 Return ONLY valid JSON — no markdown, no code fences, no commentary outside the JSON. Use this exact schema:
