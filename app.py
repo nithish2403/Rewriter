@@ -1,5 +1,7 @@
 import os
 import json
+import io
+import pdfplumber
 from openai import OpenAI, AuthenticationError, RateLimitError, APIError
 from flask import Flask, request, Response, render_template, stream_with_context
 from dotenv import load_dotenv
@@ -473,6 +475,152 @@ IMPORTANT: For the Work Experience section, use the skeleton above as your templ
             "X-Accel-Buffering": "no",
         },
     )
+
+
+VALIDATE_SYSTEM_PROMPT = """You are a senior resume quality auditor and ATS (Applicant Tracking System) specialist. You have deep knowledge of how modern ATS platforms (Workday, Greenhouse, Lever, iCIMS, Taleo, SmartRecruiters) parse and rank resumes, and what hiring managers at technical companies look for.
+
+Analyse the resume text provided and return a comprehensive validation report as valid JSON.
+
+Check ALL of the following categories thoroughly:
+
+1. GRAMMAR & LANGUAGE
+   - Grammatical errors (subject-verb agreement, article usage, prepositions)
+   - Spelling mistakes and typos
+   - Punctuation errors (missing full stops, inconsistent comma usage)
+   - Tense inconsistency (current role = present tense, past roles = past tense)
+   - Sentence fragments or run-on sentences
+   - British vs American spelling inconsistency
+
+2. FORMATTING & WHITESPACE
+   - Double or extra spaces between words
+   - Inconsistent bullet point styles (mixing -, •, *, –)
+   - Inconsistent date formats (mixing "Jan 2024" with "01/2024" etc.)
+   - Inconsistent capitalisation in headings or job titles
+   - Trailing spaces or blank lines within sections
+   - Missing space after bullet character
+
+3. ATS COMPATIBILITY
+   - Contact info completeness: name, email, phone, LinkedIn/GitHub
+   - Personal discriminatory info present (photo, DOB, nationality, marital status, religion) — flag these as errors
+   - Standard section headings used (Experience/Work Experience, Education, Skills, Certifications) — non-standard headings fail ATS
+   - Skills section present and parseable
+   - All job entries have: company name, job title, dates, location
+   - Date format is ATS-parseable (Month Year or MM/YYYY — not just years alone)
+   - No tables, text boxes, or columns inferred from formatting
+   - File is likely single-column layout (infer from text order)
+   - Keywords: if a job description was provided, flag important JD keywords missing from the resume
+
+4. CONTENT QUALITY
+   - Buzzwords and clichés present (proven track record, extensive experience, adept at, results-driven, passionate, synergy, leverage, innovative, dynamic, team player, detail-oriented)
+   - Passive voice overuse ("was responsible for" instead of active verbs)
+   - Vague statements with no evidence ("worked on various projects", "helped with...")
+   - Quantified achievements: flag any role that has NO metrics at all
+   - Action verb diversity: flag if same opening verb used 2+ times across bullets
+   - Impact statements: are outcomes clear, or just task descriptions?
+
+5. STRUCTURAL COMPLETENESS
+   - Professional summary or headline present
+   - All roles have start AND end dates (or "Present" for current)
+   - Employment gaps > 6 months (flag for candidate awareness — not necessarily an error)
+   - Education section present
+   - Certifications listed if relevant to technical role
+   - Consistent company → job title → date → location order across all roles
+
+6. LENGTH & DENSITY
+   - Resume length: warn if likely > 2 pages for < 5 years experience, or < 1 page for > 5 years
+   - Bullet count per role: flag any role with < 3 bullets (too thin) or > 10 bullets (too dense)
+   - Summary length: warn if > 6 lines (too long for ATS snippet)
+
+Return ONLY valid JSON — no markdown, no code fences, no commentary outside the JSON. Use this exact schema:
+
+{
+  "overall_score": <integer 0-100>,
+  "overall_grade": <"A" | "B" | "C" | "D" | "F">,
+  "summary": "<2-3 sentence overall assessment>",
+  "ats_compatibility_score": <integer 0-100>,
+  "ready_to_submit": <true | false>,
+  "categories": [
+    {
+      "id": "<snake_case_id>",
+      "name": "<Display Name>",
+      "score": <integer 0-100>,
+      "status": <"pass" | "warn" | "fail">,
+      "issues": [
+        {
+          "severity": <"error" | "warning" | "info">,
+          "text": "<clear description of the issue>",
+          "location": "<where in the resume, e.g. 'Konsistent Consulting, bullet 3' or 'Summary section'>",
+          "suggestion": "<specific actionable fix>"
+        }
+      ]
+    }
+  ]
+}
+
+Severity guide:
+- "error": must fix before submitting (grammar error, missing contact info, discriminatory info, ATS-breaking format)
+- "warning": should fix, will hurt score (vague bullet, missing metric, repeated verb)
+- "info": nice to improve, minor issue (style suggestion, optional enhancement)
+
+Be specific and actionable. Quote the exact text that has an issue where possible."""
+
+
+@app.route("/validate", methods=["POST"])
+def validate():
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        return {"error": "OPENAI_API_KEY environment variable is not set."}, 500
+
+    pdf_file = request.files.get("pdf")
+    job_desc = (request.form.get("job_description") or "").strip()
+
+    if not pdf_file:
+        return {"error": "No PDF file uploaded."}, 400
+
+    # ── Extract text from PDF ─────────────────────────────────────────────────
+    try:
+        pdf_bytes = pdf_file.read()
+        resume_text = ""
+        with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+            for page in pdf.pages:
+                page_text = page.extract_text(x_tolerance=2, y_tolerance=3)
+                if page_text:
+                    resume_text += page_text + "\n\n"
+        resume_text = resume_text.strip()
+    except Exception as e:
+        return {"error": f"Could not read PDF: {str(e)}"}, 400
+
+    if not resume_text:
+        return {"error": "Could not extract text from PDF. Make sure it is a text-based PDF, not a scanned image."}, 400
+
+    # ── Build user message ────────────────────────────────────────────────────
+    user_msg = f"RESUME TO VALIDATE:\n\n{resume_text}"
+    if job_desc:
+        user_msg += f"\n\n---\nJOB DESCRIPTION (for keyword gap analysis):\n\n{job_desc}"
+
+    # ── Call GPT-4o ───────────────────────────────────────────────────────────
+    try:
+        client = OpenAI(api_key=api_key)
+        resp = client.chat.completions.create(
+            model="gpt-4o",
+            max_tokens=4000,
+            temperature=0,
+            messages=[
+                {"role": "system", "content": VALIDATE_SYSTEM_PROMPT},
+                {"role": "user",   "content": user_msg},
+            ],
+            response_format={"type": "json_object"},
+        )
+        raw = resp.choices[0].message.content
+        report = json.loads(raw)
+        return report, 200
+
+    except AuthenticationError:
+        return {"error": "Invalid API key."}, 401
+    except RateLimitError:
+        return {"error": "Rate limit reached. Please wait and try again."}, 429
+    except Exception as e:
+        return {"error": f"Validation failed: {str(e)}"}, 500
 
 
 if __name__ == "__main__":

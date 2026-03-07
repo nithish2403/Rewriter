@@ -14,6 +14,7 @@
       --accent:    #4f6ef7;
       --accent-h:  #3d5ce0;
       --green:     #22c55e;
+      --yellow:    #f59e0b;
       --red:       #ef4444;
       --text:      #e4e6f0;
       --muted:     #8b8fa8;
@@ -33,13 +34,15 @@
 
     /* ── Header ── */
     header {
-      padding: 18px 28px;
+      padding: 14px 28px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      gap: 14px;
+      justify-content: space-between;
       background: var(--surface);
+      flex-shrink: 0;
     }
+    .header-left { display: flex; align-items: center; gap: 14px; }
     header .logo {
       width: 32px; height: 32px;
       background: var(--accent);
@@ -50,15 +53,55 @@
     header h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.02em; }
     header p  { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
-    /* ── Main layout ── */
-    main {
+    /* ── Tab bar ── */
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 3px;
+      border: 1px solid var(--border);
+    }
+    .tab-btn {
+      padding: 6px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      background: transparent;
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+    }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+
+    /* ── Views ── */
+    .view { display: none; flex: 1; overflow: hidden; }
+    .view.active { display: flex; }
+
+    /* ── Main layout (rewrite view) ── */
+    #rewrite-view {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0;
       flex: 1;
       overflow: hidden;
-      height: calc(100vh - 73px);
+      height: calc(100vh - 65px);
     }
+    #rewrite-view.active { display: grid; }
+
+    /* ── Validate view ── */
+    #validate-view {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      flex: 1;
+      overflow: hidden;
+      height: calc(100vh - 65px);
+    }
+    #validate-view.active { display: grid; }
 
     /* ── Panels ── */
     .panel {
@@ -118,9 +161,7 @@
       outline: none;
       resize: vertical;
     }
-    textarea:focus, select:focus {
-      border-color: var(--accent);
-    }
+    textarea:focus, select:focus { border-color: var(--accent); }
     select { cursor: pointer; }
 
     .selects-row {
@@ -129,8 +170,8 @@
       gap: 12px;
     }
 
-    /* ── Submit button ── */
-    #submit-btn {
+    /* ── Buttons ── */
+    .primary-btn {
       width: 100%;
       padding: 11px;
       background: var(--accent);
@@ -146,8 +187,8 @@
       justify-content: center;
       gap: 8px;
     }
-    #submit-btn:hover:not(:disabled) { background: var(--accent-h); }
-    #submit-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .primary-btn:hover:not(:disabled) { background: var(--accent-h); }
+    .primary-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
     .spinner {
       width: 16px; height: 16px;
@@ -161,7 +202,7 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── Status pill ── */
-    #status {
+    .status-pill {
       font-size: 12px;
       padding: 4px 10px;
       border-radius: 20px;
@@ -169,10 +210,10 @@
       align-items: center;
       gap: 6px;
     }
-    #status.show { display: flex; }
-    #status.running { background: rgba(79,110,247,0.15); color: var(--accent); }
-    #status.done    { background: rgba(34,197,94,0.15);  color: var(--green);  }
-    #status.error   { background: rgba(239,68,68,0.15);  color: var(--red);    }
+    .status-pill.show { display: flex; }
+    .status-pill.running { background: rgba(79,110,247,0.15); color: var(--accent); }
+    .status-pill.done    { background: rgba(34,197,94,0.15);  color: var(--green);  }
+    .status-pill.error   { background: rgba(239,68,68,0.15);  color: var(--red);    }
 
     .pulse {
       width: 7px; height: 7px;
@@ -180,18 +221,14 @@
       background: currentColor;
       animation: pulse 1s ease-in-out infinite;
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.3; }
-    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-    /* ── Output area ── */
+    /* ── Output area (rewrite) ── */
     #output-wrap {
       flex: 1;
       overflow-y: auto;
       background: var(--bg);
     }
-
     #output {
       padding: 20px;
       font-family: var(--mono);
@@ -202,7 +239,6 @@
       color: var(--text);
       min-height: 100%;
     }
-
     #placeholder {
       display: flex;
       flex-direction: column;
@@ -229,19 +265,10 @@
     }
     #copy-btn:hover { border-color: var(--accent); color: var(--accent); }
     #copy-btn.visible { display: block; }
-    #copy-btn.copied { border-color: var(--green); color: var(--green); }
-
-    /* ── Section dividers in output ── */
-    .section-A { color: #93c5fd; font-weight: bold; }
-    .section-B { color: #fbbf24; font-weight: bold; }
-
-    /* ── Scrollbar ── */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    #copy-btn.copied  { border-color: var(--green); color: var(--green); }
 
     /* ── Error banner ── */
-    #error-msg {
+    .error-msg {
       background: rgba(239,68,68,0.1);
       border: 1px solid rgba(239,68,68,0.3);
       color: var(--red);
@@ -250,11 +277,187 @@
       font-size: 13px;
       display: none;
     }
-    #error-msg.show { display: block; }
+    .error-msg.show { display: block; }
+
+    /* ── PDF Upload zone ── */
+    #drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    #drop-zone:hover, #drop-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(79,110,247,0.05);
+      color: var(--text);
+    }
+    #drop-zone svg { opacity: 0.4; margin-bottom: 10px; }
+    #drop-zone.has-file {
+      border-color: var(--green);
+      background: rgba(34,197,94,0.05);
+    }
+    #drop-zone.has-file svg { opacity: 0.8; color: var(--green); }
+    #file-name {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--green);
+      font-weight: 500;
+      display: none;
+    }
+    #file-input { display: none; }
+
+    /* ── Validation results ── */
+    #val-results-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    #val-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 12px;
+      color: var(--muted);
+    }
+    #val-placeholder svg { opacity: 0.3; }
+    #val-placeholder p { font-size: 13px; }
+
+    /* Score header card */
+    .score-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .score-circle {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      font-weight: 700;
+      flex-shrink: 0;
+      border: 3px solid;
+    }
+    .score-circle .score-num { font-size: 22px; line-height: 1; }
+    .score-circle .score-grade { font-size: 11px; opacity: 0.8; }
+    .score-circle.green  { border-color: var(--green); color: var(--green); }
+    .score-circle.yellow { border-color: var(--yellow); color: var(--yellow); }
+    .score-circle.red    { border-color: var(--red); color: var(--red); }
+
+    .score-meta { flex: 1; }
+    .score-meta h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .score-meta p  { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    .ready-badge {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .ready-badge.yes { background: rgba(34,197,94,0.15); color: var(--green); }
+    .ready-badge.no  { background: rgba(239,68,68,0.15); color: var(--red); }
+
+    /* Category cards */
+    .cat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .cat-header {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .cat-header:hover { background: rgba(255,255,255,0.03); }
+    .cat-status-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-pass   { background: var(--green); }
+    .dot-warn   { background: var(--yellow); }
+    .dot-fail   { background: var(--red); }
+
+    .cat-name { font-size: 13px; font-weight: 600; flex: 1; }
+    .cat-score-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .badge-pass   { background: rgba(34,197,94,0.15);  color: var(--green);  }
+    .badge-warn   { background: rgba(245,158,11,0.15); color: var(--yellow); }
+    .badge-fail   { background: rgba(239,68,68,0.15);  color: var(--red);    }
+
+    .cat-count { font-size: 12px; color: var(--muted); }
+    .cat-chevron { color: var(--muted); font-size: 12px; transition: transform 0.2s; }
+    .cat-card.open .cat-chevron { transform: rotate(180deg); }
+
+    .cat-issues { display: none; border-top: 1px solid var(--border); }
+    .cat-card.open .cat-issues { display: block; }
+
+    .issue-row {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .issue-row:last-child { border-bottom: none; }
+
+    .issue-icon {
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .issue-body { flex: 1; }
+    .issue-text { font-size: 13px; line-height: 1.5; }
+    .issue-location {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+      font-style: italic;
+    }
+    .issue-suggestion {
+      font-size: 12px;
+      color: var(--accent);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    .no-issues {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--green);
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
     /* ── Responsive ── */
     @media (max-width: 900px) {
-      main {
+      #rewrite-view, #validate-view {
         grid-template-columns: 1fr;
         height: auto;
         overflow: visible;
@@ -267,20 +470,25 @@
 <body>
 
 <header>
-  <div class="logo">✦</div>
-  <div>
-    <h1>Resume Rewriter</h1>
-    <p>Tech · Fintech · Banking — powered by GPT-4o</p>
+  <div class="header-left">
+    <div class="logo">✦</div>
+    <div>
+      <h1>Resume Rewriter</h1>
+      <p>Tech · Fintech · Banking — powered by GPT-4o</p>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('rewrite')">✏️ Rewrite</button>
+    <button class="tab-btn" onclick="switchTab('validate')">✅ Validate</button>
   </div>
 </header>
 
-<main>
+<!-- ══════════════════════ REWRITE VIEW ══════════════════════ -->
+<div id="rewrite-view" class="view active">
 
-  <!-- ── LEFT PANEL: Inputs ── -->
+  <!-- LEFT PANEL -->
   <div class="panel">
-    <div class="panel-header">
-      <h2>Input</h2>
-    </div>
+    <div class="panel-header"><h2>Input</h2></div>
     <div class="panel-body">
 
       <div class="selects-row">
@@ -328,9 +536,9 @@
           placeholder="Paste the full job description here…"></textarea>
       </div>
 
-      <div id="error-msg"></div>
+      <div id="rewrite-error" class="error-msg"></div>
 
-      <button id="submit-btn" onclick="submitRewrite()">
+      <button id="submit-btn" class="primary-btn" onclick="submitRewrite()">
         <div class="spinner" id="spinner"></div>
         <span id="btn-label">Rewrite Resume</span>
       </button>
@@ -338,12 +546,12 @@
     </div>
   </div>
 
-  <!-- ── RIGHT PANEL: Output ── -->
+  <!-- RIGHT PANEL -->
   <div class="panel">
     <div class="panel-header">
       <h2>Output</h2>
       <div style="display:flex;align-items:center;gap:10px;">
-        <div id="status">
+        <div id="status" class="status-pill">
           <div class="pulse"></div>
           <span id="status-text"></span>
         </div>
@@ -354,8 +562,7 @@
       <div id="placeholder">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="1.5">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0
-                   2-2V8z"/>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
           <polyline points="14 2 14 8 20 8"/>
           <line x1="16" y1="13" x2="8" y2="13"/>
           <line x1="16" y1="17" x2="8" y2="17"/>
@@ -367,85 +574,150 @@
     </div>
   </div>
 
-</main>
+</div><!-- end rewrite-view -->
+
+
+<!-- ══════════════════════ VALIDATE VIEW ══════════════════════ -->
+<div id="validate-view" class="view">
+
+  <!-- LEFT PANEL: Upload -->
+  <div class="panel">
+    <div class="panel-header"><h2>Upload Resume</h2></div>
+    <div class="panel-body">
+
+      <div>
+        <label>Resume PDF</label>
+        <div id="drop-zone" onclick="document.getElementById('file-input').click()"
+             ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
+             ondrop="handleDrop(event)">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.5" style="display:block;margin:0 auto 10px;">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <polyline points="9 15 12 12 15 15"/>
+          </svg>
+          <div>Click to upload or drag &amp; drop</div>
+          <div style="font-size:11px;margin-top:4px;opacity:0.6;">PDF only · text-based (not scanned)</div>
+          <div id="file-name"></div>
+        </div>
+        <input type="file" id="file-input" accept=".pdf" onchange="handleFileSelect(event)" />
+      </div>
+
+      <div>
+        <label for="val-jd">Job Description <span style="font-weight:400;color:var(--muted)">(optional — for keyword gap check)</span></label>
+        <textarea id="val-jd" rows="12"
+          placeholder="Paste the job description here to check for missing keywords…"></textarea>
+      </div>
+
+      <div id="validate-error" class="error-msg"></div>
+
+      <button id="validate-btn" class="primary-btn" onclick="submitValidate()">
+        <div class="spinner" id="val-spinner"></div>
+        <span id="val-btn-label">Validate Resume</span>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL: Results -->
+  <div class="panel">
+    <div class="panel-header">
+      <h2>Validation Report</h2>
+      <div id="val-status" class="status-pill">
+        <div class="pulse"></div>
+        <span id="val-status-text"></span>
+      </div>
+    </div>
+    <div id="val-results-wrap">
+      <div id="val-placeholder">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.5">
+          <path d="M9 11l3 3L22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        <p>Upload your resume PDF to run a full validation check.</p>
+      </div>
+      <div id="val-report" style="display:none;"></div>
+    </div>
+  </div>
+
+</div><!-- end validate-view -->
+
 
 <script>
+  /* ═══════════════════════ TAB SWITCHING ═══════════════════════ */
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+      b.classList.toggle('active', (i === 0 && tab === 'rewrite') || (i === 1 && tab === 'validate'));
+    });
+    document.getElementById('rewrite-view').classList.toggle('active', tab === 'rewrite');
+    document.getElementById('validate-view').classList.toggle('active', tab === 'validate');
+  }
+
+  /* ═══════════════════════ REWRITE ═══════════════════════ */
+
   let outputText = "";
   let streaming  = false;
   let controller = null;
 
   function setStatus(type, text) {
     const el = document.getElementById("status");
-    el.className = "show " + type;
+    el.className = "status-pill show " + type;
     document.getElementById("status-text").textContent = text;
   }
 
-  function clearStatus() {
-    document.getElementById("status").className = "";
-  }
-
   function showError(msg) {
-    const el = document.getElementById("error-msg");
+    const el = document.getElementById("rewrite-error");
     el.textContent = msg;
-    el.className = "show";
+    el.className = "error-msg show";
   }
 
   function clearError() {
-    const el = document.getElementById("error-msg");
-    el.className = "";
+    document.getElementById("rewrite-error").className = "error-msg";
   }
 
   function setLoading(on) {
-    const btn     = document.getElementById("submit-btn");
-    const spinner = document.getElementById("spinner");
-    const label   = document.getElementById("btn-label");
-    btn.disabled      = on;
-    spinner.className = on ? "spinner active" : "spinner";
-    label.textContent = on ? "Rewriting…" : "Rewrite Resume";
-    streaming         = on;
-  }
-
-  function scrollOutput() {
-    const wrap = document.getElementById("output-wrap");
-    wrap.scrollTop = wrap.scrollHeight;
+    const btn = document.getElementById("submit-btn");
+    btn.disabled = on;
+    document.getElementById("spinner").className = on ? "spinner active" : "spinner";
+    document.getElementById("btn-label").textContent = on ? "Rewriting…" : "Rewrite Resume";
+    streaming = on;
   }
 
   async function submitRewrite() {
     if (streaming) return;
-
     clearError();
 
     const baseResume = document.getElementById("base-resume").value.trim();
     const jobDesc    = document.getElementById("job-desc").value.trim();
     const sector     = document.getElementById("sector").value;
-    const role       = document.getElementById("role").value;
+    const role       = document.getElementById("role").value.trim();
 
     if (!baseResume) { showError("Please paste your base resume."); return; }
     if (!jobDesc)    { showError("Please paste the job description."); return; }
     if (!role)       { showError("Please enter the target role."); return; }
 
-    // Reset output
     outputText = "";
     const outputEl      = document.getElementById("output");
     const placeholderEl = document.getElementById("placeholder");
     const copyBtn       = document.getElementById("copy-btn");
 
-    outputEl.style.display = "none";
-    outputEl.textContent   = "";
+    outputEl.style.display      = "none";
+    outputEl.textContent        = "";
     placeholderEl.style.display = "flex";
     copyBtn.className           = "";
 
     setLoading(true);
     setStatus("running", "Generating…");
-
     controller = new AbortController();
 
     try {
       const res = await fetch("/rewrite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ base_resume: baseResume, job_description: jobDesc,
-                               sector, role }),
+        body: JSON.stringify({ base_resume: baseResume, job_description: jobDesc, sector, role }),
         signal: controller.signal,
       });
 
@@ -467,7 +739,7 @@
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
-        buffer = lines.pop(); // keep incomplete line
+        buffer = lines.pop();
 
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
@@ -477,38 +749,18 @@
           let parsed;
           try { parsed = JSON.parse(raw); } catch { continue; }
 
-          if (parsed.error) {
-            showError(parsed.error);
-            setStatus("error", "Error");
-            setLoading(false);
-            return;
-          }
-
-          if (parsed.text) {
-            outputText += parsed.text;
-            outputEl.textContent = outputText;
-            scrollOutput();
-          }
-
-          if (parsed.done) {
-            setStatus("done", "Done");
-            copyBtn.className = "visible";
-            setLoading(false);
-            return;
-          }
+          if (parsed.error) { showError(parsed.error); setStatus("error", "Error"); setLoading(false); return; }
+          if (parsed.text)  { outputText += parsed.text; outputEl.textContent = outputText;
+                              document.getElementById("output-wrap").scrollTop = 9999; }
+          if (parsed.done)  { setStatus("done", "Done"); copyBtn.className = "visible"; setLoading(false); return; }
         }
       }
-
       setStatus("done", "Done");
       copyBtn.className = "visible";
 
     } catch (err) {
-      if (err.name === "AbortError") {
-        setStatus("error", "Cancelled");
-      } else {
-        showError(err.message || "Something went wrong.");
-        setStatus("error", "Error");
-      }
+      if (err.name === "AbortError") setStatus("error", "Cancelled");
+      else { showError(err.message || "Something went wrong."); setStatus("error", "Error"); }
     } finally {
       setLoading(false);
     }
@@ -519,20 +771,182 @@
     navigator.clipboard.writeText(outputText).then(() => {
       const btn = document.getElementById("copy-btn");
       btn.textContent = "Copied!";
-      btn.className   = "visible copied";
-      setTimeout(() => {
-        btn.textContent = "Copy";
-        btn.className   = "visible";
-      }, 2000);
+      btn.className = "visible copied";
+      setTimeout(() => { btn.textContent = "Copy"; btn.className = "visible"; }, 2000);
     });
   }
 
-  // Keyboard shortcut: Ctrl/Cmd + Enter to submit
   document.addEventListener("keydown", (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-      submitRewrite();
-    }
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") submitRewrite();
   });
+
+  /* ═══════════════════════ VALIDATE ═══════════════════════ */
+
+  let selectedFile = null;
+
+  function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) setFile(file);
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    document.getElementById("drop-zone").classList.add("drag-over");
+  }
+
+  function handleDragLeave() {
+    document.getElementById("drop-zone").classList.remove("drag-over");
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById("drop-zone").classList.remove("drag-over");
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === "application/pdf") setFile(file);
+    else showValError("Please drop a PDF file.");
+  }
+
+  function setFile(file) {
+    selectedFile = file;
+    const zone = document.getElementById("drop-zone");
+    zone.classList.add("has-file");
+    const nameEl = document.getElementById("file-name");
+    nameEl.textContent = "📄 " + file.name + " (" + (file.size / 1024).toFixed(0) + " KB)";
+    nameEl.style.display = "block";
+    clearValError();
+  }
+
+  function showValError(msg) {
+    const el = document.getElementById("validate-error");
+    el.textContent = msg;
+    el.className = "error-msg show";
+  }
+
+  function clearValError() {
+    document.getElementById("validate-error").className = "error-msg";
+  }
+
+  function setValLoading(on) {
+    const btn = document.getElementById("validate-btn");
+    btn.disabled = on;
+    document.getElementById("val-spinner").className = on ? "spinner active" : "spinner";
+    document.getElementById("val-btn-label").textContent = on ? "Analysing…" : "Validate Resume";
+  }
+
+  function setValStatus(type, text) {
+    const el = document.getElementById("val-status");
+    el.className = "status-pill show " + type;
+    document.getElementById("val-status-text").textContent = text;
+  }
+
+  async function submitValidate() {
+    clearValError();
+    if (!selectedFile) { showValError("Please upload a PDF resume first."); return; }
+
+    setValLoading(true);
+    setValStatus("running", "Analysing…");
+
+    const reportEl = document.getElementById("val-report");
+    const phEl     = document.getElementById("val-placeholder");
+    reportEl.style.display = "none";
+    reportEl.innerHTML     = "";
+    phEl.style.display     = "flex";
+
+    const fd = new FormData();
+    fd.append("pdf", selectedFile);
+    const jd = document.getElementById("val-jd").value.trim();
+    if (jd) fd.append("job_description", jd);
+
+    try {
+      const res = await fetch("/validate", { method: "POST", body: fd });
+      const data = await res.json();
+
+      if (!res.ok || data.error) throw new Error(data.error || "Validation failed.");
+
+      phEl.style.display     = "none";
+      reportEl.style.display = "block";
+      renderReport(data);
+      setValStatus("done", "Done");
+
+    } catch (err) {
+      showValError(err.message || "Something went wrong.");
+      setValStatus("error", "Error");
+    } finally {
+      setValLoading(false);
+    }
+  }
+
+  function renderReport(data) {
+    const el = document.getElementById("val-report");
+    el.innerHTML = "";
+
+    // Score card
+    const score = data.overall_score || 0;
+    const grade = data.overall_grade || "?";
+    const colorClass = score >= 75 ? "green" : score >= 50 ? "yellow" : "red";
+    const ready = data.ready_to_submit;
+
+    el.innerHTML += `
+      <div class="score-card">
+        <div class="score-circle ${colorClass}">
+          <span class="score-num">${score}</span>
+          <span class="score-grade">${grade}</span>
+        </div>
+        <div class="score-meta">
+          <h3>Overall Score</h3>
+          <p>${escHtml(data.summary || "")}</p>
+          ${data.ats_compatibility_score !== undefined
+            ? `<p style="margin-top:6px;font-size:12px;">ATS Compatibility: <strong>${data.ats_compatibility_score}/100</strong></p>`
+            : ""}
+        </div>
+        <div class="ready-badge ${ready ? 'yes' : 'no'}">${ready ? "✓ Ready to submit" : "✗ Needs fixes"}</div>
+      </div>`;
+
+    // Category cards
+    const cats = data.categories || [];
+    cats.forEach((cat, idx) => {
+      const issues  = cat.issues || [];
+      const errCount  = issues.filter(i => i.severity === "error").length;
+      const warnCount = issues.filter(i => i.severity === "warning").length;
+      const status  = cat.status || "pass";
+      const badgeCls = status === "pass" ? "badge-pass" : status === "warn" ? "badge-warn" : "badge-fail";
+      const dotCls   = status === "pass" ? "dot-pass"   : status === "warn" ? "dot-warn"   : "dot-fail";
+      const countStr = issues.length === 0 ? "No issues" :
+        [errCount  ? `${errCount} error${errCount>1?'s':''}` : "",
+         warnCount ? `${warnCount} warning${warnCount>1?'s':''}` : "",
+         (issues.length - errCount - warnCount) > 0 ? `${issues.length - errCount - warnCount} info` : ""]
+        .filter(Boolean).join(" · ");
+
+      const card = document.createElement("div");
+      card.className = "cat-card" + (status !== "pass" ? " open" : "");
+      card.innerHTML = `
+        <div class="cat-header" onclick="this.parentElement.classList.toggle('open')">
+          <div class="cat-status-dot ${dotCls}"></div>
+          <span class="cat-name">${escHtml(cat.name)}</span>
+          <span class="cat-score-badge ${badgeCls}">${cat.score}/100</span>
+          <span class="cat-count">${countStr}</span>
+          <span class="cat-chevron">▼</span>
+        </div>
+        <div class="cat-issues">
+          ${issues.length === 0
+            ? `<div class="no-issues">✓ No issues found</div>`
+            : issues.map(issue => `
+              <div class="issue-row">
+                <div class="issue-icon">${issue.severity === 'error' ? '🔴' : issue.severity === 'warning' ? '🟡' : 'ℹ️'}</div>
+                <div class="issue-body">
+                  <div class="issue-text">${escHtml(issue.text)}</div>
+                  ${issue.location ? `<div class="issue-location">📍 ${escHtml(issue.location)}</div>` : ""}
+                  ${issue.suggestion ? `<div class="issue-suggestion">→ ${escHtml(issue.suggestion)}</div>` : ""}
+                </div>
+              </div>`).join("")}
+        </div>`;
+      el.appendChild(card);
+    });
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
 </script>
 
 </body>
