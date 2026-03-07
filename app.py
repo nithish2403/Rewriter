@@ -120,20 +120,8 @@ Core: AWS infrastructure, multi-account environments, Infrastructure as Code, CI
 SECTOR-SPECIFIC EMPHASIS
 ═══════════════════════════════════════════════════════════
 
-Investment banking / hedge funds:
-→ Security posture, auditability, compliance controls, IAM governance, change management, DR / resilience, production reliability, operational risk reduction, traceability, least-privilege access, controlled deployments.
-
-Fintech startups:
-→ Delivery speed, CI/CD velocity, developer experience, scalability, cost efficiency, platform self-service, rapid iteration, observability.
-
-Big Tech (FAANG-tier):
-→ Systems thinking, scale, observability depth, automation rigour, Infrastructure as Code maturity, incident response, SLOs/SLAs, distributed systems.
-
-Traditional enterprise:
-→ Stability, standardisation, multi-team coordination, documentation practices, governance frameworks, stakeholder management, change control processes.
-
-Banking (non-investment):
-→ Regulatory awareness, secure platform delivery, access governance, operational resilience, production stability, change advisory processes.
+The target sector mandate is provided in the user message. Apply it precisely to every bullet.
+Do not blend in themes from other sectors — focus exclusively on the sector stated in the mandate.
 
 ═══════════════════════════════════════════════════════════
 OUTPUT FORMAT — PRODUCE IN THIS EXACT ORDER
@@ -311,6 +299,109 @@ SECTOR_LABELS = {
     "banking": "Banking (retail / commercial)",
 }
 
+# ── Sector-specific emphasis injected dynamically into the user message ───────
+# Only the relevant sector's block is sent — model doesn't have to choose.
+
+SECTOR_EMPHASIS = {
+    "investment_banking": """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TARGET SECTOR MANDATE — INVESTMENT BANKING / HEDGE FUND
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+This resume must read like it belongs at Goldman Sachs, JP Morgan, Citadel, or a top-tier quant fund.
+Every bullet must lead with or prominently feature at least one of these themes:
+  → Security posture and access governance (IAM, PAM, least-privilege, audit trail)
+  → Change management and controlled deployments (CAB, four-eyes approval, production freeze)
+  → Operational risk reduction (blast radius containment, rollback procedures, incident playbooks)
+  → Regulatory and audit readiness (SOX alignment, immutable logs, traceability)
+  → Disaster recovery and resilience (RTO/RPO, DR runbook, BCP testing, multi-region failover)
+  → Production reliability (MTTR, change failure rate, SLA adherence, zero-downtime deployments)
+
+Vocabulary to weave in naturally (only where the experience genuinely supports it):
+  change advisory board (CAB), privileged access management (PAM), immutable audit trail,
+  four-eyes approval, production freeze, DR runbook, RTO/RPO, change failure rate,
+  mean-time-to-restore (MTTR), regulatory change control, access recertification,
+  operational risk framework, segregation of duties.
+
+Tone: senior, measured, risk-aware. Every engineering decision had a governance reason.
+""",
+    "fintech": """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TARGET SECTOR MANDATE — FINTECH STARTUP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+This resume must read like it belongs at Monzo, Wise, Revolut, Stripe, GoCardless, or a Series B/C fintech.
+Every bullet must lead with or prominently feature at least one of these themes:
+  → Delivery velocity and CI/CD pipeline maturity (trunk-based dev, feature flags, progressive delivery)
+  → Developer experience and platform self-service (golden path, internal developer platform)
+  → Scalability and cost efficiency (FinOps, horizontal scaling, cloud-native architecture)
+  → Observability and reliability (SLO/error budget, on-call, incident retrospective, MTTR)
+  → Rapid iteration and pragmatic engineering (shipped fast, unblocked teams, reduced toil)
+
+Vocabulary to weave in naturally (only where the experience genuinely supports it):
+  trunk-based development, feature flags, progressive delivery, platform engineering,
+  golden path, SLO/error budget, on-call rota, incident retrospective, developer productivity,
+  cloud-native, FinOps, self-service, toil reduction, observability signals.
+
+Tone: fast-moving, pragmatic, engineer-led. You shipped things that mattered and kept them running.
+""",
+    "big_tech": """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TARGET SECTOR MANDATE — BIG TECH (FAANG-TIER)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+This resume must read like it belongs at Google, AWS, Meta, Apple, or Microsoft.
+Every bullet must lead with or prominently feature at least one of these themes:
+  → Systems thinking and scale (millions of requests, petabytes of data, global distribution)
+  → Observability depth (distributed tracing, SLI/SLO/error budget, anomaly detection)
+  → Automation rigour and IaC maturity (no manual toil, everything codified, self-healing systems)
+  → Incident response and reliability (blameless post-mortem, blast radius, on-call escalation)
+  → Distributed systems design (dependency graph, capacity planning, fault tolerance)
+
+Vocabulary to weave in naturally (only where the experience genuinely supports it):
+  SLO/SLI/error budget, toil reduction, blameless post-mortem, canary deployment,
+  blast radius, runbook automation, distributed tracing, capacity planning,
+  oncall escalation, dependency graph, correctness at scale.
+
+Tone: rigorous, systems-level, principled. Every architectural decision had a reason at scale.
+""",
+    "enterprise": """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TARGET SECTOR MANDATE — TRADITIONAL ENTERPRISE TECH
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+This resume must read like it belongs at a large insurance firm, enterprise software vendor, or FTSE 100 IT function.
+Every bullet must lead with or prominently feature at least one of these themes:
+  → Stability and standardisation (repeatable processes, configuration baselines, platform consistency)
+  → Multi-team coordination and stakeholder management (programme delivery, cross-functional alignment)
+  → Governance and documentation (service catalogue, CMDB, runbooks, knowledge base)
+  → Change control and compliance (ITIL-aligned processes, CAB, audit readiness)
+  → Business continuity and capacity management (BCP, SLA/OLA, service management)
+
+Vocabulary to weave in naturally (only where the experience genuinely supports it):
+  ITIL, CMDB, change advisory board, service catalogue, SLA/OLA,
+  capacity management, business continuity, programme delivery,
+  centre of excellence (CoE), service management, configuration baseline.
+
+Tone: structured, collaborative, governance-aware. You brought order, repeatability, and cross-team alignment.
+""",
+    "banking": """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TARGET SECTOR MANDATE — BANKING (RETAIL / COMMERCIAL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+This resume must read like it belongs at Barclays, HSBC, Lloyds, NatWest, Santander, or similar.
+Every bullet must lead with or prominently feature at least one of these themes:
+  → Regulatory awareness and compliance (PRA/FCA alignment, DORA metrics, operational resilience)
+  → Secure platform delivery (access governance, privileged access, audit readiness)
+  → Production stability (zero-downtime deployments, production freeze adherence, change control)
+  → Operational resilience (BCP/DR testing, RTO/RPO, incident management, on-call)
+  → Access governance (access recertification, least-privilege, PAM, identity lifecycle)
+
+Vocabulary to weave in naturally (only where the experience genuinely supports it):
+  PRA/FCA alignment, operational resilience framework, DORA metrics,
+  access recertification, privileged access management, production freeze,
+  audit readiness, BCP/DR testing, change advisory board, segregation of duties.
+
+Tone: risk-aware, compliance-conscious, operationally rigorous. Every deployment was controlled and accountable.
+""",
+}
+
 # Role is free-text from the frontend — no fixed mapping needed
 
 
@@ -337,14 +428,32 @@ def rewrite():
         return {"error": "Target role is required."}, 400
 
     sector_label = SECTOR_LABELS.get(sector_key, sector_key)
+    sector_emphasis = SECTOR_EMPHASIS.get(sector_key, "")
     skeleton = build_we_skeleton(base_resume)
     roles_parsed = parse_roles_with_bullets(base_resume)
     # Build required minimums dict keyed by role heading for self-correction
     minimums = {heading: len(bullets) for heading, bullets in roles_parsed}
 
-    user_message = f"""TARGET ROLE: {role_label}
-TARGET SECTOR: {sector_label}
+    user_message = f"""━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 1 — ANALYSE THE JOB DESCRIPTION BEFORE WRITING ANYTHING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Read the job description below carefully and extract:
+  A. The top 6–8 TECHNICAL requirements / themes this role demands day-to-day
+  B. The SENIORITY SIGNALS — what does "mid-senior {role_label}" look like in this JD?
+     What ownership level, scope of impact, and technical depth does it expect?
+  C. The 10–15 most important KEYWORDS for ATS (tools, frameworks, methodologies named in the JD)
+  D. The TERMINOLOGY AND VOCABULARY this specific role and sector uses
+     (the exact words a hiring manager at this company would use)
 
+Use A–D as the PRIMARY LENS for every bullet you rewrite in Step 2.
+Every rewritten bullet must speak directly to what this JD is asking for.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 2 — REWRITE THE RESUME
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TARGET ROLE: {role_label}
+TARGET SECTOR: {sector_label}
+{sector_emphasis}
 ══════════════════════════════
 BASE RESUME
 ══════════════════════════════
@@ -357,9 +466,26 @@ JOB DESCRIPTION
 
 {skeleton}
 
-Please rewrite my resume following all the rules in your instructions. Tailor it for the {role_label} role at a {sector_label} company.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BULLET REWRITE MANDATE — READ THIS BEFORE FILLING ANY ◆SLOT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Each ◆SLOT contains an ORIGINAL bullet as raw material — not a template to lightly rephrase.
 
-IMPORTANT: For the Work Experience section, use the skeleton above as your template. Fill in every ◆SLOT-N with a rewritten bullet. Do not skip, merge, or delete any ◆SLOT line."""
+For EVERY slot, follow this process:
+  1. Identify which JD requirement (from your Step 1 analysis) this experience speaks to
+  2. Reframe the bullet so that connection is explicit — use the JD's own vocabulary
+  3. Write it at the voice and depth of a mid-senior {role_label} — show ownership, scope, technical judgement
+  4. Use the sector vocabulary from the SECTOR MANDATE above where the experience genuinely supports it
+
+A recruiter reading each bullet must immediately think: "this person has done exactly what we need."
+
+Do NOT lightly rephrase the original. The substance stays grounded in the candidate's real experience,
+but the framing, vocabulary, and emphasis must shift to match this specific role and sector.
+
+Please rewrite the resume following all rules in your instructions.
+
+IMPORTANT: For the Work Experience section, use the skeleton above as your template.
+Fill in every ◆SLOT-N with a rewritten bullet. Do not skip, merge, or delete any ◆SLOT line."""
 
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
@@ -372,7 +498,7 @@ IMPORTANT: For the Work Experience section, use the skeleton above as your templ
             resp1 = client.chat.completions.create(
                 model="gpt-4o",
                 max_tokens=8000,
-                temperature=0,
+                temperature=0.4,
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": user_message},
@@ -441,7 +567,7 @@ IMPORTANT: For the Work Experience section, use the skeleton above as your templ
                 resp2 = client.chat.completions.create(
                     model="gpt-4o",
                     max_tokens=8000,
-                    temperature=0,
+                    temperature=0.4,
                     messages=[
                         {"role": "system", "content": SYSTEM_PROMPT},
                         {"role": "user", "content": fix_prompt},
