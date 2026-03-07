@@ -26,9 +26,25 @@ CORE RULES — NON-NEGOTIABLE
 
 4. BRITISH ENGLISH: Use British English spelling throughout (e.g. optimise, standardise, prioritise, colour, behaviour, modelling).
 
-5. NO BUZZWORD STACKING: Every skill or tool must appear in the context of actual work. No phrases like "excellent communicator", "team player", or "passionate about technology".
+5. NO BUZZWORD STACKING: Every skill or tool must appear in the context of actual work. The following phrases are BANNED anywhere in the resume — do not use them under any circumstances:
+   • "proven track record" • "extensive experience" • "adept at" • "passionate about"
+   • "excellent communicator" • "team player" • "results-driven" • "detail-oriented"
+   • "dynamic" • "innovative" • "leverage" • "synergy" • "best-in-class"
+   • "strong background in" • "deep expertise in" (in the summary) • "seasoned"
+   If you find yourself writing any of these, stop and replace with a concrete evidence statement.
 
 6. BULLET DISCIPLINE: Strong active verbs. Outcome-focused. Past tense for previous roles, present tense for current role. Bullets should be 1–2 lines — but "1–2 lines" means CONTENT-RICH lines, not stripped-down summaries. For senior technical roles a 30–50 word bullet with specific tools, methods, and outcomes is correct. Do NOT condense a rich original bullet into a vague one-liner. Preserve all named technologies, tools, metrics, and technical specifics from the original. Depth and specificity make bullets credible; vagueness makes them weak.
+
+8. VERB VARIETY — NO REPEATS: Before finalising, scan all bullets across the entire resume. No action verb may appear more than TWICE across the whole document. The following verbs are the most commonly overused — avoid repeating them:
+   Over-used (use at most once each): automated, designed, developed, implemented, managed, created, built, delivered, established, led, drove, improved, optimised, streamlined.
+   Use a wide variety instead. Examples of strong alternatives:
+   — For building/creating: architected, engineered, constructed, provisioned, authored, shipped, deployed, launched, forged, assembled
+   — For improving: accelerated, elevated, hardened, tightened, reduced, cut, trimmed, boosted, enhanced, reinforced, consolidated, refined
+   — For owning/running: operated, maintained, owned, stewarded, administered, oversaw, governed, directed
+   — For analysing/solving: diagnosed, resolved, investigated, profiled, audited, surfaced, instrumented, modelled
+   — For enabling/supporting: enabled, unblocked, standardised, codified, documented, onboarded, mentored, coached, championed
+   — For designing/planning: scoped, specified, structured, mapped, coordinated, orchestrated, planned, framed
+   Count each verb before submitting. If any verb appears 3+ times, revise until no verb exceeds 2 uses.
 
 7. BULLET COUNT — SLOT TEMPLATE: The user message includes a "WORK EXPERIENCE SKELETON" with ◆SLOT-N markers. Each ◆SLOT-N shows the full original bullet text as context. Replace each ◆SLOT-N with exactly one rewritten output bullet — stronger, more sector-targeted, but equally or more detailed than the original. Never merge two ◆SLOTs. Never delete a ◆SLOT line. 1-slot → 1-bullet minimum. You may add extra bullets after the last slot.
 
@@ -350,16 +366,43 @@ IMPORTANT: For the Work Experience section, use the skeleton above as your templ
                         f"- {heading}: has {matched_count} bullets, needs {minimum}"
                     )
 
-            final = draft
+            # ── Detect repeated verbs in draft ───────────────────────────────
+            watch_verbs = [
+                "automated","designed","developed","implemented","managed",
+                "created","built","delivered","established","led","drove",
+                "improved","optimised","streamlined","maintained","deployed",
+            ]
+            bullet_lines = [l.strip() for l in draft.splitlines()
+                            if re.match(r'^\s*[◆•\-–]\s', l)]
+            verb_counts = {}
+            for bl in bullet_lines:
+                first_word = bl.lstrip("◆•-– ").split()[0].lower().rstrip(",") if bl.lstrip("◆•-– ").split() else ""
+                if first_word in watch_verbs:
+                    verb_counts[first_word] = verb_counts.get(first_word, 0) + 1
+            repeated_verbs = {v: c for v, c in verb_counts.items() if c > 2}
+
+            fix_parts = []
             if shortfalls:
-                fix_prompt = (
-                    "The resume draft below has fewer bullets than required in some roles.\n"
-                    "Expand ONLY the under-populated roles listed here (do not change anything else):\n\n"
+                fix_parts.append(
+                    "ISSUE 1 — BULLET COUNT: The following roles need more bullets:\n"
                     + "\n".join(shortfalls)
-                    + "\n\nFor each role listed, add bullets drawn from the candidate's real "
-                    "experience until it meets or exceeds the required minimum. "
+                    + "\nAdd bullets from the candidate's real experience until each meets its minimum."
+                )
+            if repeated_verbs:
+                verb_list = ", ".join(f'"{v}" ({c}x)' for v, c in repeated_verbs.items())
+                fix_parts.append(
+                    f"ISSUE 2 — REPEATED VERBS: These action verbs appear 3+ times: {verb_list}. "
+                    "Replace the excess uses with varied alternatives from the permitted verb list. "
+                    "No single verb may appear more than twice across all bullets."
+                )
+
+            final = draft
+            if fix_parts:
+                fix_prompt = (
+                    "Fix the following issues in the resume draft below. "
                     "Return the complete corrected resume.\n\n"
-                    "DRAFT:\n" + draft
+                    + "\n\n".join(fix_parts)
+                    + "\n\nDRAFT:\n" + draft
                 )
                 resp2 = client.chat.completions.create(
                     model="gpt-4o",
