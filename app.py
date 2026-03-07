@@ -28,9 +28,9 @@ CORE RULES — NON-NEGOTIABLE
 
 5. NO BUZZWORD STACKING: Every skill or tool must appear in the context of actual work. No phrases like "excellent communicator", "team player", or "passionate about technology".
 
-6. BULLET DISCIPLINE: Bullets must be 1–2 lines maximum. Strong active verbs. Outcome-focused. Past tense for previous roles, present tense for current role.
+6. BULLET DISCIPLINE: Strong active verbs. Outcome-focused. Past tense for previous roles, present tense for current role. Bullets should be 1–2 lines — but "1–2 lines" means CONTENT-RICH lines, not stripped-down summaries. For senior technical roles a 30–50 word bullet with specific tools, methods, and outcomes is correct. Do NOT condense a rich original bullet into a vague one-liner. Preserve all named technologies, tools, metrics, and technical specifics from the original. Depth and specificity make bullets credible; vagueness makes them weak.
 
-7. BULLET COUNT — SLOT TEMPLATE: The user message includes a "WORK EXPERIENCE SKELETON" with ◆SLOT-N markers. Each ◆SLOT-N represents one original bullet and must be replaced with exactly one rewritten output bullet. Never merge two ◆SLOTs into one bullet. Never delete a ◆SLOT line. This is a 1-slot → 1-bullet mapping: 8 slots → 8 bullets minimum; 5 slots → 5 bullets minimum. You may add extra bullets after the last slot. Every rewritten bullet must be stronger and more sector-targeted than the original.
+7. BULLET COUNT — SLOT TEMPLATE: The user message includes a "WORK EXPERIENCE SKELETON" with ◆SLOT-N markers. Each ◆SLOT-N shows the full original bullet text as context. Replace each ◆SLOT-N with exactly one rewritten output bullet — stronger, more sector-targeted, but equally or more detailed than the original. Never merge two ◆SLOTs. Never delete a ◆SLOT line. 1-slot → 1-bullet minimum. You may add extra bullets after the last slot.
 
 ═══════════════════════════════════════════════════════════
 IDENTITY RULE — CRITICAL
@@ -53,6 +53,7 @@ TAILORING RULES
 • Adjust the profile/summary to speak directly to what this specific company and role requires.
 • Where the candidate's experience is transferable, draw out the strongest technical parallels. For example: asset pipeline automation → deployment automation; render farm orchestration → distributed workload orchestration; VFX tooling → internal developer tooling.
 • Make every role feel like it was building towards this specific job application.
+• PRESERVE TECHNICAL SPECIFICITY: Every named tool, service, framework, metric, and methodology from the original bullet must appear in the rewritten version (unless explicitly replaced by a stronger equivalent). A rewrite that drops "CloudFormation", "MCP server", "EKS", or "£30k/year" is strictly worse than the original. Rewrites must add clarity and sector framing, never strip detail.
 
 ═══════════════════════════════════════════════════════════
 METRICS & IMPACT RULES
@@ -221,8 +222,7 @@ def build_we_skeleton(resume_text):
     for heading, bullets in roles:
         out.append(f"**{heading}**")
         for i, b in enumerate(bullets, 1):
-            hint = (b[:70] + "...") if len(b) > 70 else b
-            out.append(f"◆SLOT-{i}: [rewrite of → \"{hint}\"]")
+            out.append(f"◆SLOT-{i}: [rewrite of → \"{b}\"]")
         out.append("[add extra bullets here if the role/JD warrants it]")
         out.append("")
 
