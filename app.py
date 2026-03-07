@@ -35,16 +35,22 @@ CORE RULES — NON-NEGOTIABLE
 
 6. BULLET DISCIPLINE: Strong active verbs. Outcome-focused. Past tense for previous roles, present tense for current role. Bullets should be 1–2 lines — but "1–2 lines" means CONTENT-RICH lines, not stripped-down summaries. For senior technical roles a 30–50 word bullet with specific tools, methods, and outcomes is correct. Do NOT condense a rich original bullet into a vague one-liner. Preserve all named technologies, tools, metrics, and technical specifics from the original. Depth and specificity make bullets credible; vagueness makes them weak.
 
-8. VERB VARIETY — NO REPEATS: Before finalising, scan all bullets across the entire resume. No action verb may appear more than TWICE across the whole document. The following verbs are the most commonly overused — avoid repeating them:
-   Over-used (use at most once each): automated, designed, developed, implemented, managed, created, built, delivered, established, led, drove, improved, optimised, streamlined.
-   Use a wide variety instead. Examples of strong alternatives:
-   — For building/creating: architected, engineered, constructed, provisioned, authored, shipped, deployed, launched, forged, assembled
-   — For improving: accelerated, elevated, hardened, tightened, reduced, cut, trimmed, boosted, enhanced, reinforced, consolidated, refined
-   — For owning/running: operated, maintained, owned, stewarded, administered, oversaw, governed, directed
-   — For analysing/solving: diagnosed, resolved, investigated, profiled, audited, surfaced, instrumented, modelled
-   — For enabling/supporting: enabled, unblocked, standardised, codified, documented, onboarded, mentored, coached, championed
-   — For designing/planning: scoped, specified, structured, mapped, coordinated, orchestrated, planned, framed
-   Count each verb before submitting. If any verb appears 3+ times, revise until no verb exceeds 2 uses.
+8. VERB VARIETY — STRICT NO REPEATS: Every action verb across the entire resume must be UNIQUE — no verb may appear more than ONCE as the opening word of any bullet. Before writing each bullet, check every verb already used. If the verb you are about to use has already appeared, pick a different one.
+   Commonly overused verbs to actively avoid repeating: automated, designed, developed, implemented, managed, created, built, delivered, established, led, drove, improved, optimised, streamlined, maintained, deployed.
+   Verb bank — pick from this list for variety:
+   — Building/creating: architected, engineered, constructed, provisioned, authored, shipped, launched, forged, assembled, spun up, rolled out
+   — Improving: accelerated, elevated, hardened, tightened, reduced, cut, trimmed, boosted, reinforced, consolidated, refined, overhauled, rationalised
+   — Owning/running: operated, owned, stewarded, administered, oversaw, governed, directed, ran, coordinated
+   — Analysing/solving: diagnosed, resolved, investigated, profiled, audited, surfaced, instrumented, modelled, uncovered, quantified
+   — Enabling/supporting: enabled, unblocked, standardised, codified, onboarded, championed, embedded, facilitated
+   — Designing/planning: scoped, specified, structured, mapped, orchestrated, planned, framed, blueprinted
+   — Integrating/connecting: wired, integrated, bridged, unified, connected, federated
+   After drafting all bullets, do a final scan: list every opening verb. If any appears twice, revise before submitting.
+
+9. IMPACT BULLET — ONE PER COMPANY: The first bullet under every company must follow this exact narrative structure — all within a single cohesive 2–3 sentence bullet (not a list):
+   STRUCTURE: [Problem context: what was broken, missing, or at risk] → [Why it mattered: business cost, customer pain, operational risk, or compliance exposure] → [What you owned and how you solved it: your specific role, tools, and approach] → [Quantified outcome: metric, benchmark, or before/after comparison] → [Downstream impact: what changed in the team, system, or business as a result]
+   EXAMPLE FORMAT: "Infrastructure lacked repeatable account provisioning across 7 AWS accounts, creating inconsistent security postures and slowing onboarding; owned end-to-end design and delivery of a CloudFormation-based multi-account baseline that reduced provisioning time from hours to 6 minutes, standardised logging and IAM controls across all accounts, and eliminated a recurring class of security audit findings."
+   This bullet must be the richest, most narrative entry for that company. It sets context for everything that follows. Label it in the skeleton as ◆IMPACT.
 
 7. BULLET COUNT — SLOT TEMPLATE: The user message includes a "WORK EXPERIENCE SKELETON" with ◆SLOT-N markers. Each ◆SLOT-N shows the full original bullet text as context. Replace each ◆SLOT-N with exactly one rewritten output bullet — stronger, more sector-targeted, but equally or more detailed than the original. Never merge two ◆SLOTs. Never delete a ◆SLOT line. 1-slot → 1-bullet minimum. You may add extra bullets after the last slot.
 
@@ -237,6 +243,12 @@ def build_we_skeleton(resume_text):
 
     for heading, bullets in roles:
         out.append(f"**{heading}**")
+        out.append(
+            "◆IMPACT: [Write the IMPACT BULLET here — see Rule 9. "
+            "2–3 sentences covering: problem context → why it mattered → "
+            "your ownership & approach → quantified outcome → downstream impact. "
+            f"Draw from these originals for raw material: {'; '.join(bullets[:3])}]"
+        )
         for i, b in enumerate(bullets, 1):
             out.append(f"◆SLOT-{i}: [rewrite of → \"{b}\"]")
         out.append("[add extra bullets here if the role/JD warrants it]")
@@ -379,7 +391,7 @@ IMPORTANT: For the Work Experience section, use the skeleton above as your templ
                 first_word = bl.lstrip("◆•-– ").split()[0].lower().rstrip(",") if bl.lstrip("◆•-– ").split() else ""
                 if first_word in watch_verbs:
                     verb_counts[first_word] = verb_counts.get(first_word, 0) + 1
-            repeated_verbs = {v: c for v, c in verb_counts.items() if c > 2}
+            repeated_verbs = {v: c for v, c in verb_counts.items() if c > 1}
 
             fix_parts = []
             if shortfalls:
@@ -391,9 +403,9 @@ IMPORTANT: For the Work Experience section, use the skeleton above as your templ
             if repeated_verbs:
                 verb_list = ", ".join(f'"{v}" ({c}x)' for v, c in repeated_verbs.items())
                 fix_parts.append(
-                    f"ISSUE 2 — REPEATED VERBS: These action verbs appear 3+ times: {verb_list}. "
-                    "Replace the excess uses with varied alternatives from the permitted verb list. "
-                    "No single verb may appear more than twice across all bullets."
+                    f"ISSUE 2 — REPEATED VERBS: These action verbs appear more than once: {verb_list}. "
+                    "Every opening verb across ALL bullets must be unique — no verb may appear more than once. "
+                    "Replace duplicate uses with varied alternatives from the verb bank in your instructions."
                 )
 
             final = draft
