@@ -30,7 +30,7 @@ CORE RULES — NON-NEGOTIABLE
 
 6. BULLET DISCIPLINE: Bullets must be 1–2 lines maximum. Strong active verbs. Outcome-focused. Past tense for previous roles, present tense for current role.
 
-7. BULLET COUNT — HARD MINIMUM: The user message contains an "ORIGINAL BULLETS — REWRITE INSTRUCTIONS" section. It lists every original bullet per role, numbered. You must produce at least one rewritten output bullet for every numbered input bullet — do not merge two originals into one output, and do not skip any. Think of it as a 1-in → 1-out minimum mapping: 8 originals → at least 8 outputs; 5 originals → at least 5 outputs. You may produce more. Never produce fewer. Rewrite each in stronger, more targeted language for the specific role and sector.
+7. BULLET COUNT — SLOT TEMPLATE: The user message includes a "WORK EXPERIENCE SKELETON" with ◆SLOT-N markers. Each ◆SLOT-N represents one original bullet and must be replaced with exactly one rewritten output bullet. Never merge two ◆SLOTs into one bullet. Never delete a ◆SLOT line. This is a 1-slot → 1-bullet mapping: 8 slots → 8 bullets minimum; 5 slots → 5 bullets minimum. You may add extra bullets after the last slot. Every rewritten bullet must be stronger and more sector-targeted than the original.
 
 ═══════════════════════════════════════════════════════════
 IDENTITY RULE — CRITICAL
@@ -194,11 +194,11 @@ def parse_roles_with_bullets(resume_text):
     return roles
 
 
-def build_bullet_constraints(resume_text):
+def build_we_skeleton(resume_text):
     """
-    Return a structured block that lists every original bullet per role,
-    instructing the model to rewrite each one individually.
-    This is far more binding than a simple count instruction.
+    Build a pre-structured Work Experience skeleton with one ◆SLOT per
+    original bullet.  The model fills in every slot — it cannot silently
+    skip one without leaving a visible ◆SLOT marker in the output.
     """
     roles = parse_roles_with_bullets(resume_text)
     if not roles:
@@ -206,22 +206,49 @@ def build_bullet_constraints(resume_text):
 
     out = [
         "══════════════════════════════════════════════════════════════",
-        "ORIGINAL BULLETS — REWRITE INSTRUCTIONS (HARD REQUIREMENT)",
+        "WORK EXPERIENCE SKELETON — COMPLETE EVERY ◆SLOT",
         "══════════════════════════════════════════════════════════════",
-        "For EACH role below you MUST produce AT LEAST the same number",
-        "of bullets shown. Rewrite every listed bullet in stronger,",
-        "more targeted language suited to the target role and sector.",
-        "Do NOT merge, drop, or skip any bullet. You may add extras.",
+        "Use this skeleton for the Work Experience section of your output.",
+        "Replace each ◆SLOT-N with exactly one rewritten bullet.",
+        "Rules:",
+        "  • One ◆SLOT-N → one output bullet.  Never merge two slots.",
+        "  • Never delete a ◆SLOT line.",
+        "  • You MAY add extra bullets after the last ◆SLOT for each role.",
+        "  • Rewrite every slot in stronger, sector-targeted language.",
         "",
     ]
+
     for heading, bullets in roles:
-        out.append(f"ROLE: {heading}  ({len(bullets)} bullets — minimum {len(bullets)} required)")
+        out.append(f"**{heading}**")
         for i, b in enumerate(bullets, 1):
-            out.append(f"  {i}. {b}")
+            hint = (b[:70] + "...") if len(b) > 70 else b
+            out.append(f"◆SLOT-{i}: [rewrite of → \"{hint}\"]")
+        out.append("[add extra bullets here if the role/JD warrants it]")
         out.append("")
 
     out.append("══════════════════════════════════════════════════════════════")
     return "\n".join(out)
+
+
+def count_output_bullets(text):
+    """
+    Count bullets (lines starting with – or - or • or *) per role heading
+    in a markdown-formatted resume output.  Returns {heading: count}.
+    """
+    bullet_re = re.compile(r'^\s*[-–•*]\s')
+    heading_re = re.compile(r'^\s*\*\*(.+?)\*\*')
+    lines = text.splitlines()
+    counts = {}
+    current = None
+    for line in lines:
+        h = heading_re.match(line)
+        if h:
+            current = h.group(1).strip()
+            if current not in counts:
+                counts[current] = 0
+        elif bullet_re.match(line) and current:
+            counts[current] += 1
+    return counts
 
 
 # ── Sector labels ─────────────────────────────────────────────────────────────
@@ -260,7 +287,10 @@ def rewrite():
         return {"error": "Target role is required."}, 400
 
     sector_label = SECTOR_LABELS.get(sector_key, sector_key)
-    bullet_constraints = build_bullet_constraints(base_resume)
+    skeleton = build_we_skeleton(base_resume)
+    roles_parsed = parse_roles_with_bullets(base_resume)
+    # Build required minimums dict keyed by role heading for self-correction
+    minimums = {heading: len(bullets) for heading, bullets in roles_parsed}
 
     user_message = f"""TARGET ROLE: {role_label}
 TARGET SECTOR: {sector_label}
@@ -275,12 +305,11 @@ JOB DESCRIPTION
 ══════════════════════════════
 {job_description}
 
-══════════════════════════════
-{bullet_constraints}
+{skeleton}
 
-Please rewrite my resume following all the rules in your instructions. Tailor it specifically for the {role_label} role at a {sector_label} company based on the job description above.
+Please rewrite my resume following all the rules in your instructions. Tailor it for the {role_label} role at a {sector_label} company.
 
-FINAL CHECK BEFORE YOU WRITE: Re-read the ORIGINAL BULLETS section above. Count the bullets listed for each role. Your output MUST contain at least that many bullets per role — no exceptions."""
+IMPORTANT: For the Work Experience section, use the skeleton above as your template. Fill in every ◆SLOT-N with a rewritten bullet. Do not skip, merge, or delete any ◆SLOT line."""
 
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
@@ -289,19 +318,66 @@ FINAL CHECK BEFORE YOU WRITE: Re-read the ORIGINAL BULLETS section above. Count 
     def generate():
         client = OpenAI(api_key=api_key)
         try:
-            stream = client.chat.completions.create(
+            # ── Pass 1: generate full resume (non-streaming so we can inspect) ──
+            resp1 = client.chat.completions.create(
                 model="gpt-4o",
                 max_tokens=8000,
+                temperature=0,
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": user_message},
                 ],
-                stream=True,
+                stream=False,
             )
-            for chunk in stream:
-                delta = chunk.choices[0].delta
-                if delta.content:
-                    yield f"data: {json.dumps({'text': delta.content})}\n\n"
+            draft = resp1.choices[0].message.content
+
+            # ── Pass 2: self-correction if any role is under the minimum ─────
+            output_counts = count_output_bullets(draft)
+            shortfalls = []
+            for heading, minimum in minimums.items():
+                # find the best-matching heading key in the output
+                matched_count = 0
+                for out_heading, cnt in output_counts.items():
+                    # fuzzy match: check if key words from the parsed heading
+                    # appear in the output heading
+                    key_words = [w for w in heading.split() if len(w) > 3
+                                 and w.lower() not in ('london', 'india', 'hyderabad')]
+                    if any(kw.lower() in out_heading.lower() for kw in key_words):
+                        matched_count = cnt
+                        break
+                if matched_count < minimum:
+                    shortfalls.append(
+                        f"- {heading}: has {matched_count} bullets, needs {minimum}"
+                    )
+
+            final = draft
+            if shortfalls:
+                fix_prompt = (
+                    "The resume draft below has fewer bullets than required in some roles.\n"
+                    "Expand ONLY the under-populated roles listed here (do not change anything else):\n\n"
+                    + "\n".join(shortfalls)
+                    + "\n\nFor each role listed, add bullets drawn from the candidate's real "
+                    "experience until it meets or exceeds the required minimum. "
+                    "Return the complete corrected resume.\n\n"
+                    "DRAFT:\n" + draft
+                )
+                resp2 = client.chat.completions.create(
+                    model="gpt-4o",
+                    max_tokens=8000,
+                    temperature=0,
+                    messages=[
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": fix_prompt},
+                    ],
+                    stream=False,
+                )
+                final = resp2.choices[0].message.content
+
+            # ── Stream the final output to the client ────────────────────────
+            # Emit in chunks so the frontend streaming logic still works
+            chunk_size = 120
+            for i in range(0, len(final), chunk_size):
+                yield f"data: {json.dumps({'text': final[i:i+chunk_size]})}\n\n"
 
             yield f"data: {json.dumps({'done': True})}\n\n"
 
