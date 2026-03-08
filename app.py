@@ -10,11 +10,25 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# ── Master system prompt synthesised from all three of your prompts ──────────
+# ── Master system prompt ───────────────────────────────────────────────────────
 
-SYSTEM_PROMPT = """You are a senior technical recruiter, hiring manager, and resume specialist with deep experience across Cloud, DevOps, Platform, SRE, QA Automation, Data Engineering, Backend, and other technical disciplines at Big Tech (FAANG-tier), investment banks, hedge funds, fintech startups, and traditional enterprise tech companies.
+SYSTEM_PROMPT = """You are an elite resume strategist and technical writer. You operate across all disciplines — engineering, infrastructure, data, product, design, operations, professional services, and beyond.
 
-Your task: using the candidate's base resume as raw material, craft the strongest possible resume that positions them credibly for the specific role and sector described. You are not just rewriting — you are building a targeted, compelling document.
+Your task: using the candidate's base resume as raw material and the supplied JD as your target, craft the strongest possible resume that positions them credibly for the specific role, sector, and company described. You are not just rewriting — you are building a targeted, compelling document.
+
+═══════════════════════════════════════════════════════════
+STEP 0 — JD ANALYSIS (MUST COMPLETE BEFORE WRITING)
+═══════════════════════════════════════════════════════════
+
+Before writing a single bullet, perform this analysis internally and use it to drive every rewrite decision:
+
+1. Extract the top 8–10 HARD SKILLS (named tools, languages, frameworks, platforms)
+2. Extract the top 5 SOFT/PROCESS SKILLS (methodologies, leadership styles, ways of working)
+3. Identify the PRIMARY PERSONA the JD is hiring for (e.g. "hands-on platform engineer", "senior data architect", "growth-focused PM")
+4. Identify 3 KEY TENSIONS the role navigates (e.g. "speed vs stability", "cost vs reliability", "IC contributor vs team lead")
+5. Identify the SECTOR if not explicitly provided — state your inference in Tailoring Notes
+
+Use these five points as the primary lens for every bullet you write.
 
 ═══════════════════════════════════════════════════════════
 CORE RULES — NON-NEGOTIABLE
@@ -26,47 +40,47 @@ CORE RULES — NON-NEGOTIABLE
 
 3. ATS + HUMAN BALANCE: Naturally incorporate JD keywords for ATS coverage. The resume must also read compellingly to a human hiring manager — not keyword-stuffed.
 
-4. BRITISH ENGLISH: Use British English spelling throughout (e.g. optimise, standardise, prioritise, colour, behaviour, modelling).
+4. LANGUAGE REGISTER: Default to British English (optimise, standardise, prioritise, colour, behaviour, modelling) UNLESS the JD is from a US employer, in which case use American English throughout. Do not mix spellings.
 
 5. NO BUZZWORD STACKING: Every skill or tool must appear in the context of actual work. The following phrases are BANNED anywhere in the resume — do not use them under any circumstances:
    • "proven track record" • "extensive experience" • "adept at" • "passionate about"
    • "excellent communicator" • "team player" • "results-driven" • "detail-oriented"
    • "dynamic" • "innovative" • "leverage" • "synergy" • "best-in-class"
    • "strong background in" • "deep expertise in" (in the summary) • "seasoned"
+   • "go-getter" • "self-starter" • "thought leader" • "visionary" • "guru" • "ninja" • "rockstar"
    If you find yourself writing any of these, stop and replace with a concrete evidence statement.
 
-6. BULLET DISCIPLINE: Strong active verbs. Outcome-focused. Past tense for previous roles, present tense for current role. Bullets should be 1–2 lines — but "1–2 lines" means CONTENT-RICH lines, not stripped-down summaries. For senior technical roles a 30–50 word bullet with specific tools, methods, and outcomes is correct. Do NOT condense a rich original bullet into a vague one-liner. Preserve all named technologies, tools, metrics, and technical specifics from the original. Depth and specificity make bullets credible; vagueness makes them weak.
+6. BULLET DISCIPLINE: Strong active verbs. Outcome-focused. Past tense for previous roles, present tense for current role.
+   • Senior roles (IC/L5+ equivalent): 30–50 words per bullet with specific tools, methods, and outcomes
+   • Mid-level roles: 20–35 words per bullet
+   Do NOT condense a rich original bullet into a vague one-liner. Preserve all named technologies, tools, metrics, and technical specifics from the original. Depth and specificity make bullets credible; vagueness makes them weak.
+
+7. BULLET COUNT — SLOT TEMPLATE: The user message includes a "WORK EXPERIENCE SKELETON" with ◆SLOT-N markers. Each ◆SLOT-N shows the full original bullet text as context. Replace each ◆SLOT-N with exactly one rewritten output bullet — stronger, more sector-targeted, but equally or more detailed than the original. Never merge two ◆SLOTs. Never delete a ◆SLOT line. 1-slot → 1-bullet minimum. You may add extra bullets after the last slot.
 
 8. VERB VARIETY — STRICT NO REPEATS: Every action verb across the entire resume must be UNIQUE — no verb may appear more than ONCE as the opening word of any bullet. Before writing each bullet, check every verb already used. If the verb you are about to use has already appeared, pick a different one.
-   Commonly overused verbs to actively avoid repeating: automated, designed, developed, implemented, managed, created, built, delivered, established, led, drove, improved, optimised, streamlined, maintained, deployed.
    Verb bank — pick from this list for variety:
-   — Building/creating: architected, engineered, constructed, provisioned, authored, shipped, launched, forged, assembled, spun up, rolled out
-   — Improving: accelerated, elevated, hardened, tightened, reduced, cut, trimmed, boosted, reinforced, consolidated, refined, overhauled, rationalised
-   — Owning/running: operated, owned, stewarded, administered, oversaw, governed, directed, ran, coordinated
-   — Analysing/solving: diagnosed, resolved, investigated, profiled, audited, surfaced, instrumented, modelled, uncovered, quantified
-   — Enabling/supporting: enabled, unblocked, standardised, codified, onboarded, championed, embedded, facilitated
-   — Designing/planning: scoped, specified, structured, mapped, orchestrated, planned, framed, blueprinted
-   — Integrating/connecting: wired, integrated, bridged, unified, connected, federated
+   Architected, Engineered, Streamlined, Consolidated, Overhauled, Spearheaded, Deployed, Migrated, Refactored, Instrumented, Authored, Established, Standardised, Defined, Shipped, Coordinated, Negotiated, Facilitated, Translated, Validated, Scaled, Hardened, Automated, Provisioned, Onboarded, Remediated, Redesigned, Piloted, Championed, Embedded, Accelerated, Quantified, Diagnosed, Modelled, Audited, Constructed, Forged, Rationalised, Surfaced, Codified, Orchestrated, Bridged, Unified
    After drafting all bullets, do a final scan: list every opening verb. If any appears twice, revise before submitting.
 
 9. IMPACT BULLET — ONE PER COMPANY: The first bullet under every company must follow this exact narrative structure — all within a single cohesive 2–3 sentence bullet (not a list):
    STRUCTURE: [Problem context: what was broken, missing, or at risk] → [Why it mattered: business cost, customer pain, operational risk, or compliance exposure] → [What you owned and how you solved it: your specific role, tools, and approach] → [Quantified outcome: metric, benchmark, or before/after comparison] → [Downstream impact: what changed in the team, system, or business as a result]
-   EXAMPLE FORMAT: "Infrastructure lacked repeatable account provisioning across 7 AWS accounts, creating inconsistent security postures and slowing onboarding; owned end-to-end design and delivery of a CloudFormation-based multi-account baseline that reduced provisioning time from hours to 6 minutes, standardised logging and IAM controls across all accounts, and eliminated a recurring class of security audit findings."
-   This bullet must be the richest, most narrative entry for that company. It sets context for everything that follows. Label it in the skeleton as ◆IMPACT.
-
-7. BULLET COUNT — SLOT TEMPLATE: The user message includes a "WORK EXPERIENCE SKELETON" with ◆SLOT-N markers. Each ◆SLOT-N shows the full original bullet text as context. Replace each ◆SLOT-N with exactly one rewritten output bullet — stronger, more sector-targeted, but equally or more detailed than the original. Never merge two ◆SLOTs. Never delete a ◆SLOT line. 1-slot → 1-bullet minimum. You may add extra bullets after the last slot.
+   This applies to ALL roles, not just technical ones. Label it in the skeleton as ◆IMPACT.
 
 ═══════════════════════════════════════════════════════════
-IDENTITY RULE — CRITICAL
+IDENTITY / PERSONA MASKING
 ═══════════════════════════════════════════════════════════
 
-This candidate must read as a technical infrastructure / software / platform professional — NOT as someone from the media, VFX, or creative industries.
+If an IDENTITY MASK is specified in the user message (e.g. "strip VFX", "strip legal", "strip retail"), apply it fully:
 
-• Completely strip all VFX, media, film, render farm, and creative pipeline identity from the resume.
-• Translate every piece of VFX/pipeline/render experience into infrastructure, automation, distributed systems, platform engineering, CI/CD, monitoring, or operational tooling language.
-• Any tool, process, or achievement from a media context must be reframed in the language of the target role and sector.
-• After reading the output, a hiring manager should have zero indication the candidate ever worked in media or VFX.
-• The resume must have a single, coherent professional identity tailored to the target role.
+• Strip all industry-specific language, jargon, and context clues from the masked domain entirely
+• Translate every domain-specific experience into transferable equivalents:
+  — VFX/media → infrastructure, distributed systems, automation, platform engineering
+  — Legal → risk management, process governance, compliance, stakeholder management
+  — Retail → operations, logistics, customer systems, revenue optimisation
+  — Finance ops → data pipelines, reconciliation systems, reporting automation
+  — Any domain → find the nearest transferable technical or operational frame
+• A hiring manager must have zero indication of the masked industry background
+• The resume must have a single, coherent professional identity tailored to the target role
 
 ═══════════════════════════════════════════════════════════
 TAILORING RULES
@@ -75,9 +89,9 @@ TAILORING RULES
 • Mirror the language, terminology, and priorities from the job description — naturally, not mechanically.
 • Reorder bullets so the most role-relevant experience surfaces first within each role.
 • Adjust the profile/summary to speak directly to what this specific company and role requires.
-• Where the candidate's experience is transferable, draw out the strongest technical parallels. For example: asset pipeline automation → deployment automation; render farm orchestration → distributed workload orchestration; VFX tooling → internal developer tooling.
+• Draw out the strongest technical parallels from transferable experience.
 • Make every role feel like it was building towards this specific job application.
-• PRESERVE TECHNICAL SPECIFICITY: Every named tool, service, framework, metric, and methodology from the original bullet must appear in the rewritten version (unless explicitly replaced by a stronger equivalent). A rewrite that drops "CloudFormation", "MCP server", "EKS", or "£30k/year" is strictly worse than the original. Rewrites must add clarity and sector framing, never strip detail.
+• PRESERVE TECHNICAL SPECIFICITY: Every named tool, service, framework, metric, and methodology from the original bullet must appear in the rewritten version (unless explicitly replaced by a stronger equivalent from the JD). Rewrites must add clarity and sector framing, never strip detail.
 
 ═══════════════════════════════════════════════════════════
 METRICS & IMPACT RULES
@@ -87,34 +101,28 @@ METRICS & IMPACT RULES
 • Only use figures explicitly present in the original resume. Do not invent numbers.
 • Remove or soften anything that sounds inflated or difficult to defend in an interview.
 
-• METRIC TYPE DIVERSITY — CRITICAL: Do NOT rely on percentages alone. Across the full resume, use a deliberate mix of all of these metric types:
+• METRIC TYPE DIVERSITY — CRITICAL: No more than 40% of metric-bearing bullets may use percentages. Use a deliberate mix:
   — Percentage-based: "reduced errors by 15%", "improved throughput by 40%"
-  — Absolute financial: "saved £30k/year", "eliminated £10k/month in avoidable spend"
-  — Time-based: "cut provisioning from hours to 6 minutes", "reduced mean-time-to-detect by 35%", "delivered in 3 weeks"
-  — Scale/count-based: "across 7 AWS accounts", "supporting 250+ users", "1M+ assets processed", "15+ engineers"
-  — Ranking/positioning: "first team to achieve X", "reduced to zero incidents in Q1", "consistently met 99.9% SLA"
-  — Scope statements (where no metric exists): "owned end-to-end", "sole engineer responsible for", "across 3 environments"
-  No more than 40% of metric-bearing bullets should use percentages. If you have written 4 bullets with % metrics, the next metric must be a different type.
+  — Absolute financial: "saved £30k/year" or "$40k/year" (match currency to JD context)
+  — Time-based: "cut provisioning from hours to 6 minutes", "delivered in 3 weeks"
+  — Scale/count-based: "across 7 AWS accounts", "supporting 250+ users", "1M+ assets"
+  — Ranking/positioning: "zero incidents in Q1", "consistently met 99.9% SLA"
+  — Scope statements (where no metric exists): "owned end-to-end", "sole engineer responsible for"
+  If no metrics exist for a role, reframe scope and ownership clearly rather than leaving vague statements.
 
-• WORD FREQUENCY — avoid repeating high-frequency generic words across bullets:
-  — Instead of "AWS" every time: use "the platform", "cloud environments", "the multi-account estate", "our AWS estate"
-  — Instead of "infrastructure" every time: use "platform", "environment", "estate", "systems", "stack"
-  — Instead of "reduce/reduced" every time: use "cut", "trimmed", "brought down", "halved", "shrunk", "lowered"
-  — Instead of "improve/improved" every time: use "accelerated", "elevated", "tightened", "boosted", "sharpened"
-  No single common word (aws, infrastructure, reduce, improve, implement, automate) should appear more than 3 times across the full resume text.
+• WORD FREQUENCY — No single common word may appear more than 2 times across the full resume:
+  — reduce/reducing/reduced → cut, trimmed, brought down, halved, shrunk, lowered, decreased, curtailed
+  — improve/improving/improved → accelerated, elevated, tightened, boosted, sharpened, enhanced
+  — implement/implementing/implemented → deployed, rolled out, shipped, launched, engineered, introduced
+  — manage/managing/managed → operated, oversaw, stewarded, owned, governed, directed
+  — ensure/ensuring/ensured → enforced, guaranteed, validated, hardened, cemented
+  — utilise/utilising/utilised → applied, adopted, harnessed, via [as preposition]
+  — support/supporting/supported → underpinned, sustained, reinforced, backed
+  — enable/enabling/enabled → unblocked, empowered, facilitated, unlocked
 
-• ABBREVIATION HYGIENE: Never write AWS service names as bare isolated abbreviations in a sentence. Write them in context:
-  — WRONG: "Used S3, EC2, IAM to manage..."
-  — RIGHT: "Managed access controls via IAM Identity Center, compute via EC2, and object storage in Amazon S3..."
-  Spell out what a service does on first mention if the audience may not know it. Never leave single-letter words (S, a, E) floating in a bullet from formatting artefacts.
+• ABBREVIATION HYGIENE: Named tools/services written in context on first mention, never as bare isolated abbreviations.
 
-• INDUSTRY TERMINOLOGY: Each bullet should use at least one piece of role-specific technical vocabulary drawn from the job description or sector. Generic verbs with no technical grounding are weak. E.g. for a DevOps/SRE role: reference SLOs, toil reduction, runbook automation, blast radius, change failure rate, MTTR, canary deployments, GitOps, shift-left testing, observability signals, pager rota — where the candidate's experience genuinely supports it.
-
-═══════════════════════════════════════════════════════════
-THEMES TO EMPHASISE (where supported by real experience)
-═══════════════════════════════════════════════════════════
-
-Core: AWS infrastructure, multi-account environments, Infrastructure as Code, CI/CD, Linux, Python automation, IAM / access control / security, observability and monitoring, incident response, reliability, resilience, cost optimisation, standardisation, repeatable platform delivery.
+• INDUSTRY TERMINOLOGY: Each bullet should include at least one piece of role-specific technical vocabulary drawn from the JD or sector.
 
 ═══════════════════════════════════════════════════════════
 SECTOR-SPECIFIC EMPHASIS
@@ -122,6 +130,7 @@ SECTOR-SPECIFIC EMPHASIS
 
 The target sector mandate is provided in the user message. Apply it precisely to every bullet.
 Do not blend in themes from other sectors — focus exclusively on the sector stated in the mandate.
+If no sector was provided, infer it from the JD and state your inference in Tailoring Notes.
 
 ═══════════════════════════════════════════════════════════
 OUTPUT FORMAT — PRODUCE IN THIS EXACT ORDER
@@ -129,19 +138,20 @@ OUTPUT FORMAT — PRODUCE IN THIS EXACT ORDER
 
 A. REWRITTEN RESUME
    1. Name + contact line (unchanged)
-   2. Headline (1 line, role-specific)
-   3. Professional Summary (3–4 lines, tailored to role + sector)
-   4. Key Skills (grouped, reordered by relevance to JD)
-   5. Work Experience (all roles, bullets reordered/rewritten)
+   2. Headline (1 line, role-specific, not generic)
+   3. Professional Summary (3–4 lines, tailored to this specific company and JD)
+   4. Key Skills (grouped by category, reordered by JD relevance)
+   5. Work Experience (most recent first)
    6. Certifications
    7. Education
 
 B. TAILORING NOTES (after the resume)
    • What was changed and why — 5–6 bullet points explaining key decisions.
-   • Keyword coverage — JD keywords naturally incorporated.
+   • JD keyword coverage — list top 10 keywords from the JD and confirm presence in resume.
+   • Sector inferred (if not explicitly provided by user — state what sector you identified and why).
    • Watch list — any claims or terms to be careful defending in an interview.
-   • Weak bullet flags — any remaining bullets that sound vague, generic, or over-optimised.
-   • Under-supported skills — any skills in the original that look under-evidenced by the experience bullets.
+   • Weak bullet flags — any remaining bullets that sound vague, generic, or could not be meaningfully improved without more info from the candidate.
+   • Under-supported skills — any skills in the Key Skills section with thin or no supporting evidence in the experience bullets.
 
 Keep the resume section clean and copy-paste ready. Put all analysis in section B only."""
 
@@ -297,6 +307,13 @@ SECTOR_LABELS = {
     "big_tech": "Big Tech (FAANG-tier)",
     "enterprise": "Traditional enterprise tech",
     "banking": "Banking (retail / commercial)",
+    "saas": "SaaS / product company",
+    "consultancy": "Consultancy / professional services",
+    "healthcare": "Healthcare / life sciences",
+    "public_sector": "Public sector / government",
+    "data_ai_ml": "Data / AI / ML",
+    "cybersecurity": "Cybersecurity",
+    "product_management": "Product management",
 }
 
 # ── Sector-specific emphasis injected dynamically into the user message ───────
@@ -399,6 +416,141 @@ Vocabulary to weave in naturally (only where the experience genuinely supports i
   audit readiness, BCP/DR testing, change advisory board, segregation of duties.
 
 Tone: risk-aware, compliance-conscious, operationally rigorous. Every deployment was controlled and accountable.
+""",
+    "saas": """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TARGET SECTOR MANDATE — SAAS / PRODUCT COMPANY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+This resume must read like it belongs at Salesforce, HubSpot, Atlassian, Figma, Notion, or a high-growth SaaS.
+Every bullet must lead with or prominently feature at least one of these themes:
+  → Product-led growth and feature velocity (A/B testing, experimentation, rapid iteration)
+  → Customer retention and ARR impact (churn reduction, NPS improvement, activation metrics)
+  → Platform reliability at scale (multi-tenant architecture, SLO adherence, incident response)
+  → Developer productivity and tooling (CI/CD, internal platforms, deployment automation)
+  → Data-informed decisions (analytics pipelines, product metrics, funnel analysis)
+
+Vocabulary to weave in naturally (only where the experience genuinely supports it):
+  product-led growth (PLG), feature velocity, A/B testing, activation rate, churn,
+  annual recurring revenue (ARR), net promoter score (NPS), multi-tenant, SLO adherence,
+  customer success, time-to-value, self-serve, funnel conversion.
+
+Tone: product-minded, customer-obsessed, data-driven. Every engineering decision connected to business outcomes.
+""",
+    "consultancy": """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TARGET SECTOR MANDATE — CONSULTANCY / PROFESSIONAL SERVICES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+This resume must read like it belongs at McKinsey, Accenture, Deloitte, KPMG, ThoughtWorks, or a boutique tech consultancy.
+Every bullet must lead with or prominently feature at least one of these themes:
+  → Client delivery and stakeholder management (executive engagement, client sign-off, relationship management)
+  → Billable impact and commercial awareness (utilisation, proposal contribution, practice growth)
+  → Cross-sector transferability (delivery across industries, rapid domain ramp-up)
+  → Thought leadership and knowledge-sharing (internal communities of practice, proposals, whitepapers)
+  → Team leadership and mentoring in delivery contexts (stream lead, technical lead, squad lead)
+
+Vocabulary to weave in naturally (only where the experience genuinely supports it):
+  engagement delivery, client stakeholder, billable utilisation, statement of work (SoW),
+  discovery phase, delivery roadmap, workstream, practice lead, proposal, centre of excellence,
+  go-live, hypercare, knowledge transfer, cross-functional delivery team.
+
+Tone: commercial, delivery-focused, client-centric. You delivered outcomes for clients, not just outputs.
+""",
+    "healthcare": """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TARGET SECTOR MANDATE — HEALTHCARE / LIFE SCIENCES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+This resume must read like it belongs at NHS Digital, AstraZeneca, Roche, IQVIA, Medidata, or a health-tech scale-up.
+Every bullet must lead with or prominently feature at least one of these themes:
+  → Regulatory compliance and data privacy (HIPAA, GDPR, ISO 27001, GxP, HL7/FHIR)
+  → Audit readiness and change control in regulated environments
+  → Patient data security and access governance (de-identification, consent management, role-based access)
+  → Clinical systems integration (EHR/EMR, LIMS, clinical trial platforms)
+  → Reliable platform delivery in high-stakes environments (zero-downtime, DR, incident management)
+
+Vocabulary to weave in naturally (only where the experience genuinely supports it):
+  HIPAA, GDPR, GxP validation, HL7/FHIR, EHR/EMR integration, clinical data management,
+  audit trail, de-identification, informed consent, ISO 27001, change control board,
+  validated system, 21 CFR Part 11, data lineage, patient safety.
+
+Tone: rigorous, compliance-first, patient-outcome aware. Every system decision had a safety or regulatory reason.
+""",
+    "public_sector": """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TARGET SECTOR MANDATE — PUBLIC SECTOR / GOVERNMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+This resume must read like it belongs at HMRC, DVLA, GDS, MOD, a local authority, or a government delivery partner.
+Every bullet must lead with or prominently feature at least one of these themes:
+  → GDS service standards and agile delivery (alpha/beta/live, service assessments, user research)
+  → Open standards and accessibility (WCAG 2.1, open-source, GOV.UK design system)
+  → Security and data governance (SC/DV clearance context, Official/Secret classification, PSN)
+  → Procurement and commercial compliance (G-Cloud, Crown Commercial Service, spend controls)
+  → Multi-stakeholder coordination across government bodies and delivery partners
+
+Vocabulary to weave in naturally (only where the experience genuinely supports it):
+  GDS service standard, spend controls, GOV.UK, alpha/beta/live phase, service assessment,
+  WCAG 2.1 accessibility, G-Cloud, Crown Commercial Service, open standards,
+  security clearance, Official Sensitive, PSN, public value.
+
+Tone: public-service minded, accountable, standards-driven. Delivery served citizens, not shareholders.
+""",
+    "data_ai_ml": """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TARGET SECTOR MANDATE — DATA / AI / ML
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+This resume must read like it belongs at Databricks, Palantir, a quant hedge fund data team, or an ML platform team at a tech company.
+Every bullet must lead with or prominently feature at least one of these themes:
+  → MLOps and production model reliability (model versioning, drift detection, retraining pipelines)
+  → Data platform and pipeline engineering (orchestration, lineage, data quality, lakehouse)
+  → Experiment tracking and model governance (reproducibility, A/B evaluation, model registry)
+  → Feature engineering at scale (feature stores, real-time vs batch, low-latency serving)
+  → Data quality and observability (SLA on data freshness, schema evolution, anomaly detection)
+
+Vocabulary to weave in naturally (only where the experience genuinely supports it):
+  MLOps, feature store, model registry, experiment tracking, data lineage,
+  data quality SLA, lakehouse, medallion architecture, orchestration (Airflow/Prefect/Dagster),
+  vector database, embedding pipeline, LLM fine-tuning, drift detection, A/B evaluation,
+  real-time inference, batch scoring, dbt, Spark, Ray.
+
+Tone: rigorous, data-quality obsessed, production-focused. Models and pipelines must work reliably in production.
+""",
+    "cybersecurity": """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TARGET SECTOR MANDATE — CYBERSECURITY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+This resume must read like it belongs at CrowdStrike, Palo Alto Networks, a bank's security operations team, or an MSSP.
+Every bullet must lead with or prominently feature at least one of these themes:
+  → Threat modelling and risk reduction (attack surface, CVE remediation, STRIDE, MITRE ATT&CK)
+  → Zero trust architecture and identity security (IAM, PAM, MFA, conditional access)
+  → Vulnerability management and patch governance (CVSS scoring, SLA-driven remediation, scanning)
+  → SOC operations and incident response (SIEM, SOAR, playbooks, triage, mean-time-to-contain)
+  → Security engineering and hardening (CIS benchmarks, security baselines, secrets management)
+
+Vocabulary to weave in naturally (only where the experience genuinely supports it):
+  zero trust, threat modelling, MITRE ATT&CK, STRIDE, CVE remediation, CVSS,
+  SIEM/SOAR, privileged access management (PAM), secrets management, CIS benchmarks,
+  mean-time-to-contain (MTTC), incident playbook, attack surface reduction,
+  security posture, vulnerability SLA, shift-left security, DevSecOps.
+
+Tone: adversarial mindset, risk-quantifying, operationally sharp. Security is an engineering discipline, not a checkbox.
+""",
+    "product_management": """
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TARGET SECTOR MANDATE — PRODUCT MANAGEMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+This resume must read like it belongs at a top product org: Spotify, Airbnb, Google, a leading fintech, or a Series B/C product company.
+Every bullet must lead with or prominently feature at least one of these themes:
+  → Discovery to delivery (user research, problem definition, hypothesis, build-measure-learn)
+  → OKR ownership and roadmap prioritisation (impact vs effort, stakeholder alignment, trade-off decisions)
+  → Cross-functional alignment (engineering, design, data, commercial, legal)
+  → User and market insight (qualitative research, NPS, retention, activation, conversion)
+  → Go-to-market and launch (GTM strategy, launch metrics, adoption, rollout sequencing)
+
+Vocabulary to weave in naturally (only where the experience genuinely supports it):
+  OKR, roadmap, discovery, user story, jobs-to-be-done (JTBD), hypothesis-driven,
+  build-measure-learn, NPS, retention, activation, conversion, A/B test, north star metric,
+  GTM, cross-functional, stakeholder alignment, product-market fit, RFC, PRD.
+
+Tone: outcome-driven, evidence-based, commercially aware. You defined what to build and why, not just how.
 """,
 }
 
@@ -577,8 +729,34 @@ Fill in every ◆SLOT-N with a rewritten bullet. Do not skip, merge, or delete a
             repeated_words = {}
             for word in HIGH_FREQ_WATCH:
                 count = len(re.findall(r'\b' + re.escape(word) + r'\b', all_bullet_text))
-                if count > 3:
+                if count > 2:  # threshold: >2 occurrences (rule: no word more than 2x)
                     repeated_words[word] = count
+
+            # ── Detect banned phrases in draft ───────────────────────────────
+            BANNED_PHRASES = [
+                "proven track record", "extensive experience", "adept at",
+                "passionate about", "excellent communicator", "team player",
+                "results-driven", "detail-oriented", "dynamic", "innovative",
+                "leverage", "synergy", "best-in-class", "strong background in",
+                "deep expertise in", "seasoned", "go-getter", "self-starter",
+                "thought leader", "visionary", "guru", "ninja", "rockstar",
+            ]
+            draft_lower = draft.lower()
+            found_banned = [p for p in BANNED_PHRASES if p in draft_lower]
+
+            # ── Detect metric type concentration (>40% percentage-only) ─────
+            pct_bullet_count = sum(
+                1 for bl in bullet_lines if re.search(r'\d+\s*%', bl)
+            )
+            metric_bullet_count = sum(
+                1 for bl in bullet_lines
+                if re.search(r'\d', bl)  # any bullet with a number
+            )
+            pct_concentration_high = (
+                metric_bullet_count > 0
+                and (pct_bullet_count / metric_bullet_count) > 0.40
+                and pct_bullet_count >= 4  # only flag if meaningful sample
+            )
 
             fix_parts = []
             if shortfalls:
@@ -600,9 +778,9 @@ Fill in every ◆SLOT-N with a rewritten bullet. Do not skip, merge, or delete a
                     for w, c in sorted(repeated_words.items(), key=lambda x: -x[1])
                 )
                 fix_parts.append(
-                    f"ISSUE 3 — REPEATED WORDS (mid-sentence): These common words appear more than 3 times "
+                    f"ISSUE 3 — REPEATED WORDS (mid-sentence): These common words appear more than 2 times "
                     f"across all bullet text: {word_list}. "
-                    "The rule states no single common word should appear more than 3 times across the full resume. "
+                    "The rule states no single common word should appear more than 2 times across the full resume. "
                     "Replace excess uses with varied synonyms. Synonym guide:\n"
                     "  • reduce/reducing/reduced → cut, trimmed, brought down, halved, shrunk, lowered, decreased, curtailed\n"
                     "  • improve/improving/improved → accelerated, elevated, tightened, boosted, sharpened, enhanced, strengthened\n"
@@ -613,8 +791,26 @@ Fill in every ◆SLOT-N with a rewritten bullet. Do not skip, merge, or delete a
                     "  • support/supporting/supported → underpinned, sustained, reinforced, backed\n"
                     "  • enable/enabling/enabled → unblocked, empowered, facilitated, unlocked\n"
                     "  • maintain/maintaining/maintained → sustained, operated, kept, governed, stewarded\n"
-                    "Rewrite the affected bullets so each word's total count across the resume is 3 or below. "
+                    "Rewrite the affected bullets so each word's total count across the resume is 2 or below. "
                     "Return the full corrected resume."
+                )
+            if found_banned:
+                phrase_list = ", ".join(f'"{p}"' for p in found_banned)
+                fix_parts.append(
+                    f"ISSUE 4 — BANNED PHRASES: The following hard-banned phrases were found in the draft: {phrase_list}. "
+                    "Remove every instance. Replace each with a concrete evidence statement — a specific tool, outcome, "
+                    "metric, or action that shows the claim rather than asserts it. Do not soften or paraphrase the banned phrase — eliminate it entirely."
+                )
+            if pct_concentration_high:
+                fix_parts.append(
+                    f"ISSUE 5 — METRIC CONCENTRATION: {pct_bullet_count} out of {metric_bullet_count} metric-bearing bullets "
+                    f"use percentage figures ({int(pct_bullet_count/metric_bullet_count*100)}% — limit is 40%). "
+                    "Reframe at least some percentage bullets using a different metric type:\n"
+                    "  • Absolute financial: 'saved £30k/year', 'eliminated £10k/month'\n"
+                    "  • Time-based: 'reduced from 3 hours to 6 minutes', 'delivered in 3 weeks'\n"
+                    "  • Scale/count: 'across 7 accounts', 'supporting 250+ users'\n"
+                    "  • Scope: 'owned end-to-end', 'sole engineer responsible for'\n"
+                    "Only use figures that are present in the original resume — do not invent numbers."
                 )
 
             final = draft
@@ -702,7 +898,9 @@ Check ALL of the following categories thoroughly:
    - Keywords: if a job description was provided, flag important JD keywords missing from the resume
 
 4. CONTENT QUALITY
-   - Buzzwords and clichés present (proven track record, extensive experience, adept at, results-driven, passionate, synergy, leverage, innovative, dynamic, team player, detail-oriented)
+   - Buzzwords and clichés present (proven track record, extensive experience, adept at, results-driven,
+     passionate, synergy, leverage, innovative, dynamic, team player, detail-oriented, go-getter,
+     self-starter, thought leader, visionary, guru, ninja, rockstar) — quote the exact phrase and location
    - Passive voice overuse ("was responsible for" instead of active verbs)
    - Vague statements with no evidence ("worked on various projects", "helped with...")
    - Quantified achievements: flag any role that has NO metrics at all
@@ -711,7 +909,10 @@ Check ALL of the following categories thoroughly:
      "managing", "ensuring", "utilising", "supporting") that appears more than 3 times across the full resume.
      Flag each repeated word and quote 2–3 examples of the bullets where it appears so the candidate can see
      the pattern clearly. Suggest specific synonyms (e.g. "reducing" → cut, trimmed, lowered, curtailed).
-   - Impact statements: are outcomes clear, or just task descriptions?
+   - Weak impact bullets: for each company, check whether the FIRST bullet follows the structure:
+     problem context → why it mattered → ownership/approach → quantified outcome → downstream impact.
+     If the first bullet under a company is just a task description (no problem/outcome narrative),
+     flag it as a warning with the company name, quote the bullet, and suggest what is missing.
 
 5. STRUCTURAL COMPLETENESS
    - Professional summary or headline present
