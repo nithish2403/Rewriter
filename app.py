@@ -62,9 +62,15 @@ CORE RULES — NON-NEGOTIABLE
    Architected, Engineered, Streamlined, Consolidated, Overhauled, Spearheaded, Deployed, Migrated, Refactored, Instrumented, Authored, Established, Standardised, Defined, Shipped, Coordinated, Negotiated, Facilitated, Translated, Validated, Scaled, Hardened, Automated, Provisioned, Onboarded, Remediated, Redesigned, Piloted, Championed, Embedded, Accelerated, Quantified, Diagnosed, Modelled, Audited, Constructed, Forged, Rationalised, Surfaced, Codified, Orchestrated, Bridged, Unified
    After drafting all bullets, do a final scan: list every opening verb. If any appears twice, revise before submitting.
 
-9. IMPACT BULLET — ONE PER COMPANY: The first bullet under every company must follow this exact narrative structure — all within a single cohesive 2–3 sentence bullet (not a list):
-   STRUCTURE: [Problem context: what was broken, missing, or at risk] → [Why it mattered: business cost, customer pain, operational risk, or compliance exposure] → [What you owned and how you solved it: your specific role, tools, and approach] → [Quantified outcome: metric, benchmark, or before/after comparison] → [Downstream impact: what changed in the team, system, or business as a result]
-   This applies to ALL roles, not just technical ones. Label it in the skeleton as ◆IMPACT.
+9. IMPACT BULLET — ONE PER COMPANY (MANDATORY): The FIRST bullet under every company must be a 2–3 sentence narrative impact statement. Write it as a dash bullet starting with "– **Impact:**" followed by the narrative. Do NOT skip this for any role.
+
+   FORMAT: – **Impact:** [2–3 sentences following this structure]
+   STRUCTURE: [Problem context: what was broken, missing, or at risk and why it mattered to the business] → [What you specifically owned and how you solved it: your role, tools, approach] → [Quantified outcome and downstream impact on team/system/business]
+
+   EXAMPLE:
+   – **Impact:** Seven AWS accounts operated with ad-hoc IAM configurations and no central audit trail, creating weeks of manual remediation work every quarter and exposing the business to compliance risk. Architected an IAM Identity Centre rollout across all accounts with SCPs and centralised CloudTrail logging, taking full ownership from design through to production. Quarterly audit prep dropped from three weeks to two days and security incident frequency fell by 40%.
+
+   This is REQUIRED for ALL roles — technical and non-technical. Never omit it.
 
 ═══════════════════════════════════════════════════════════
 IDENTITY / PERSONA MASKING
@@ -264,10 +270,10 @@ def build_we_skeleton(resume_text):
     for heading, bullets in roles:
         out.append(f"**{heading}**")
         out.append(
-            "◆IMPACT: [Write the IMPACT BULLET here — see Rule 9. "
-            "2–3 sentences covering: problem context → why it mattered → "
+            "◆IMPACT [REQUIRED — write as: – **Impact:** ...]: "
+            "2–3 sentence narrative bullet. Cover: problem context → why it mattered → "
             "your ownership & approach → quantified outcome → downstream impact. "
-            f"Draw from these originals for raw material: {'; '.join(bullets[:3])}]"
+            f"Raw material from original bullets: {'; '.join(bullets[:3])}"
         )
         for i, b in enumerate(bullets, 1):
             out.append(f"◆SLOT-{i}: [rewrite of → \"{b}\"]")
@@ -832,6 +838,15 @@ Fill in every ◆SLOT-N with a rewritten bullet. Do not skip, merge, or delete a
                     stream=False,
                 )
                 final = resp2.choices[0].message.content
+
+            # ── Post-process: clean up skeleton markers that leaked through ──
+            # Normalise any ◆IMPACT variant → proper bold label
+            final = re.sub(r'◆\s*IMPACT\s*[:\-–]?\s*\*\*Impact:\*\*', '– **Impact:**', final)
+            final = re.sub(r'◆\s*IMPACT\s*[:\-–]?\s*', '– **Impact:** ', final)
+            # Strip any remaining ◆SLOT markers (should have been replaced by GPT)
+            final = re.sub(r'◆SLOT-\d+:\s*\[rewrite of.*?\]\s*', '', final)
+            # Strip any bare ◆ that didn't become a bullet
+            final = re.sub(r'◆\s*', '', final)
 
             # ── Stream the final output to the client ────────────────────────
             # Emit in chunks so the frontend streaming logic still works
